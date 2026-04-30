@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 
 class RegisteredUserController extends Controller
@@ -25,6 +26,15 @@ class RegisteredUserController extends Controller
             'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'mobile'   => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            // Bangla custom validation messages
+            'name.required'        => 'নাম দেওয়া আবশ্যক।',
+            'email.required'       => 'ইমেইল দেওয়া আবশ্যক।',
+            'email.email'          => 'সঠিক ইমেইল ঠিকানা দিন।',
+            'email.unique'         => 'এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট আছে। অন্য ইমেইল ব্যবহার করুন অথবা লগইন করুন।',
+            'password.required'    => 'পাসওয়ার্ড দেওয়া আবশ্যক।',
+            'password.confirmed'   => 'পাসওয়ার্ড দুটো মিলছে না।',
+            'password.min'         => 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে।',
         ]);
 
         $user = User::create([
@@ -34,7 +44,12 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
+        // FIX: try-catch so mail/queue failure does NOT block registration
+        try {
+            event(new Registered($user));
+        } catch (\Exception $e) {
+            Log::error('Registration event failed: ' . $e->getMessage());
+        }
 
         Auth::login($user);
 

@@ -12,13 +12,6 @@
     </button>
 </div>
 
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
-
 @if($banners->isEmpty())
 <div class="card p-5 text-center">
     <i class="fas fa-images fa-3x text-muted mb-3 d-block"></i>

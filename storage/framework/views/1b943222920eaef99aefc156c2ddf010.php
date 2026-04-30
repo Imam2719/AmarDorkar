@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 <title><?php echo $__env->yieldContent('title', __('messages.site_name')); ?></title>
+<link rel="icon" type="image/png" href="<?php echo e(asset('amardorkar.png')); ?>">
 <meta name="description" content="<?php echo $__env->yieldContent('meta_desc', __('messages.site_description')); ?>">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -30,10 +31,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .search-btn{position:absolute;right:5px;top:5px;width:36px;height:36px;background:var(--primary);border:none;border-radius:50%;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,transform .2s;}
 .search-btn:hover{background:var(--primary-dark);transform:scale(1.06);}
 .header-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.lang-switcher{display:flex;background:var(--surface-2);border-radius:20px;border:1px solid var(--border);padding:2px;gap:2px;}
-.lang-btn{padding:4px 9px;background:transparent;border:none;color:var(--muted);cursor:pointer;text-decoration:none;font-size:11px;font-weight:700;border-radius:16px;transition:all .18s;line-height:1;white-space:nowrap;}
-.lang-btn:hover{color:var(--primary);}
-.lang-btn.active{background:var(--primary);color:#fff;box-shadow:0 1px 5px rgba(26,158,74,.35);}
+.lang-toggle-btn{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:800;transition:background .18s,color .18s,transform .18s;letter-spacing:-.3px;}
+.lang-toggle-btn:hover{background:var(--primary);color:#fff;transform:rotate(10deg);}
 .theme-switcher{display:none;}
 /* Single theme toggle icon button */
 .theme-toggle-btn{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:background .18s,color .18s,transform .18s;}
@@ -74,9 +73,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .product-grid{display:flex;flex-wrap:wrap;margin:0 -8px;}
 .product-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform .32s cubic-bezier(.4,0,.2,1),box-shadow .32s,border-color .32s;height:100%;display:flex;flex-direction:column;position:relative;}
 .product-card:hover{transform:translateY(-8px);box-shadow:0 22px 50px rgba(0,0,0,.14);border-color:rgba(26,158,74,.4);}
-.product-img-wrap{position:relative;height:210px;background:var(--surface-2);overflow:hidden;}
-.product-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .42s cubic-bezier(.4,0,.2,1);}
-.product-card:hover .product-img-wrap img{transform:scale(1.07);}
+.product-img-wrap{position:relative;height:210px;background:var(--surface-2);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.product-img-wrap img{width:100%;height:100%;object-fit:contain;transition:transform .42s cubic-bezier(.4,0,.2,1);padding:8px;}
+.product-card:hover .product-img-wrap img{transform:scale(1.05);}
 .product-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;gap:9px;transition:background .28s;}
 .product-card:hover .product-img-overlay{background:rgba(0,0,0,.28);}
 .product-overlay-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;opacity:0;transform:translateY(12px);transition:opacity .25s,transform .25s,background .2s,color .2s;box-shadow:0 3px 12px rgba(0,0,0,.2);}
@@ -84,8 +83,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .product-card:hover .product-overlay-btn{opacity:1;transform:none;}
 .product-card:hover .product-overlay-btn:nth-child(2){transition-delay:.06s;}
 .product-image{position:relative;height:210px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.product-image img{width:100%;height:100%;object-fit:cover;transition:transform .42s cubic-bezier(.4,0,.2,1);}
-.product-card:hover .product-image img{transform:scale(1.07);}
+.product-image img{width:100%;height:100%;object-fit:contain;transition:transform .42s cubic-bezier(.4,0,.2,1);padding:8px;}
+.product-card:hover .product-image img{transform:scale(1.05);}
 .product-badge{position:absolute;top:9px;right:9px;background:linear-gradient(135deg,#e53935,#b71c1c);color:#fff;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800;box-shadow:0 2px 8px rgba(229,57,53,.45);letter-spacing:.2px;}
 .product-info{padding:14px 13px 13px;flex:1;display:flex;flex-direction:column;}
 .product-name{font-size:14px;font-weight:700;margin-bottom:4px;line-height:1.4;min-height:40px;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
@@ -174,8 +173,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .empty-state i{font-size:58px;color:var(--muted);margin-bottom:16px;display:block;}
 
 /* FOOTER */
-.footer{background:var(--surface);color:var(--text);margin-top:52px;border-top:3px solid var(--primary);}
-.footer-top{padding:48px 0 32px;}
+.footer{background:var(--surface);color:var(--text);margin-top:32px;border-top:3px solid var(--primary);}
+.footer-top{padding:28px 0 20px;}
 .footer-brand-name{font-size:22px;font-weight:800;color:var(--primary);letter-spacing:-.5px;}
 .footer-brand-tagline{font-size:12.5px;color:var(--muted);margin-top:4px;}
 .footer-contact-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
@@ -244,13 +243,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 
         <div class="header-controls">
             
-            <div class="lang-switcher">
-                
-                <button type="button" onclick="switchLang('bn')"
-                    class="lang-btn <?php echo e(app()->getLocale()==='bn' ? 'active' : ''); ?>" id="langBtnBn">বাং</button>
-                <button type="button" onclick="switchLang('en')"
-                    class="lang-btn <?php echo e(app()->getLocale()==='en' ? 'active' : ''); ?>" id="langBtnEn">EN</button>
-            </div>
+            <button type="button" class="lang-toggle-btn" id="langToggleBtn"
+                onclick="switchLang('<?php echo e(app()->getLocale()==='bn' ? 'en' : 'bn'); ?>')"
+                title="<?php echo e(app()->getLocale()==='bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'); ?>">
+                <?php echo e(app()->getLocale()==='bn' ? 'EN' : 'বাং'); ?>
+
+            </button>
             <button class="theme-toggle-btn" id="themeToggleBtn"
                 onclick="toggleTheme()"
                 title="<?php echo e(session('theme','light')==='dark' ? (app()->getLocale()==='bn' ? 'লাইট মোড' : 'Light Mode') : (app()->getLocale()==='bn' ? 'ডার্ক মোড' : 'Dark Mode')); ?>">
@@ -518,23 +516,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
         </div>
     </div>
 
-    
-    <div class="footer-bottom">
-        <div class="fw-wrap">
-            <div class="footer-bottom-inner">
-                <p class="text-muted small mb-0">
-                    &copy; 2022–<?php echo e(date('Y')); ?> <a href="<?php echo e(route('home')); ?>" class="text-success text-decoration-none fw-semibold">amardorkar</a>.
-                    <?php echo e(__('messages.all_rights')); ?>
-
-                </p>
-                <div class="footer-bottom-links bengali-text">
-                    <a onclick="openPanel('panelPrivacy')"><?php echo e(__('messages.privacy_policy')); ?></a>
-                    <a onclick="openPanel('panelReturns')"><?php echo e(__('messages.returns_refunds')); ?></a>
-                    <a onclick="openPanel('panelContact')"><?php echo e(__('messages.contact_us')); ?></a>
-                </div>
-            </div>
-        </div>
-    </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -801,6 +782,9 @@ document.addEventListener('click',e=>{
 <?php if(session('open_login_modal')): ?>
 window.addEventListener('load',()=>openLoginModal());
 <?php endif; ?>
+<?php if($errors->hasAny(['name', 'email', 'mobile', 'password']) && request()->route() && !request()->routeIs('login')): ?>
+window.addEventListener('load',()=>openLoginModal('register'));
+<?php endif; ?>
 </script>
 
 
@@ -896,6 +880,17 @@ window.addEventListener('load',()=>openLoginModal());
 
             
             <div id="authPane_register" class="auth-tab-pane" style="display:none;">
+                <?php
+                    $isLoginError = in_array('These credentials do not match our records.', $errors->get('email') ?? []);
+                ?>
+                <?php if($errors->hasAny(['name', 'email', 'mobile', 'password']) && !$isLoginError): ?>
+                <div style="background:#fee2e2;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;border:1px solid #fecaca;">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div><?php echo e($error); ?></div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+                <?php endif; ?>
                 <form method="POST" action="<?php echo e(route('register')); ?>">
                     <?php echo csrf_field(); ?>
                     <div style="margin-bottom:12px;">
@@ -1099,10 +1094,6 @@ function toggleTheme(){
 
 /* ── INSTANT LANGUAGE SWITCH (no page reload) ── */
 function switchLang(lang) {
-    // Button active state আপডেট করো তৎক্ষণাৎ
-    document.getElementById('langBtnBn').classList.toggle('active', lang === 'bn');
-    document.getElementById('langBtnEn').classList.toggle('active', lang === 'en');
-
     // Session-এ save করো AJAX দিয়ে
     fetch('<?php echo e(route("language.switch")); ?>', {
         method: 'POST',
