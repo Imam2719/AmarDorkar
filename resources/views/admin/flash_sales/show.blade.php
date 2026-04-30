@@ -170,8 +170,7 @@
                         <div class="d-flex align-items-center gap-2">
                             @if($fsp->product?->primaryImage)
                                 <img src="{{ $fsp->product->image_url }}" style="width:42px;height:42px;object-fit:cover;border-radius:8px;">
-                            @elseif($fsp->product?->image_path)
-                                <img src="{{ $fsp->product->image_url }}" style="width:42px;height:42px;object-fit:cover;border-radius:8px;">
+                            
                             @endif
                             <div>
                                 <strong class="bengali-text">{{ $fsp->product?->name_en }}</strong><br>

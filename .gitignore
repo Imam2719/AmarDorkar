@@ -22,3 +22,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+amardorkar-laravel/
+.env
+node_modules/
+vendor/
+storage/logs/*.log
+public/build/
+public/hot

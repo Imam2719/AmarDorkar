@@ -68,7 +68,7 @@
       <div class="card-body">
         @if($discount->product)
           <div class="d-flex gap-3 mb-3">
-            @if($discount->product->image_path)
+            @if($discount->product->image_url)
               <img src="{{ $discount->product->image_url }}"
                    style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
             @else

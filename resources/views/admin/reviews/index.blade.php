@@ -2,18 +2,10 @@
 @section('title', app()->getLocale()==='bn' ? 'রিভিউ ব্যবস্থাপনা' : 'Review Management')
 @section('page-title', app()->getLocale()==='bn' ? 'রিভিউ ব্যবস্থাপনা' : 'Review Management')
 
-@push('styles')
-<style>
-@media(max-width:575px){
-  #reviewsStatsGrid{grid-template-columns:repeat(2,1fr) !important;}
-}
-</style>
-@endpush
-
 @section('content')
 
 {{-- Stats --}}
-<div class="adm-stats fade-up" style="grid-template-columns:repeat(3,1fr)"  id="reviewsStatsGrid">
+<div class="adm-stats fade-up" style="grid-template-columns:repeat(3,1fr)">
   <div class="adm-stat blue">
     <div class="adm-stat-icon blue"><i class="fas fa-star"></i></div>
     <div class="adm-stat-val">{{ $stats['total'] }}</div>

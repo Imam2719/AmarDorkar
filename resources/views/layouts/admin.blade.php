@@ -409,14 +409,9 @@ body{
   .adm-stats{grid-template-columns:repeat(2,1fr) !important;gap:12px;}
 }
 @media(max-width:575px){
-  /* Keep 2 cols even on small phones — never go to 1 col */
-  .adm-stats{grid-template-columns:repeat(2,1fr) !important;gap:10px;}
-  .adm-stat{padding:14px 12px;}
-  .adm-stat-val{font-size:18px;}
-  .adm-topbar{padding:0 12px;}
-  .adm-page-title{font-size:13px;}
-  /* Make table scrollable */
-  .table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .adm-stats{grid-template-columns:1fr !important;}
+  .adm-topbar{padding:0 14px;}
+  .adm-page-title{font-size:14px;}
 }
 
 /* ─── STAT GRID (used by orders/sales/customers pages) ─── */
@@ -448,34 +443,6 @@ body{
 }
 .card-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;margin:0;}
 
-/* ─── PREMIUM UI ENHANCEMENTS ─────────────── */
-/* Gradient top border on stat cards */
-.stat-card::before{
-  content:'';position:absolute;inset:0 0 auto 0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0;
-}
-.stat-card.blue::before,.stat-card:nth-child(4n+1)::before{background:var(--primary);}
-.stat-card.green::before,.stat-card:nth-child(4n+2)::before{background:var(--success);}
-.stat-card.amber::before,.stat-card:nth-child(4n+3)::before{background:var(--warning);}
-.stat-card.red::before,.stat-card:nth-child(4n+4)::before{background:var(--danger);}
-
-/* Better card hover */
-.adm-card:hover{box-shadow:var(--sh);transition:box-shadow .2s;}
-
-/* Better table on mobile */
-@media(max-width:767px){
-  .adm-table td,.adm-table th{padding:9px 10px;font-size:12px;}
-  .table>:not(caption)>*>*{padding:.55rem .7rem;font-size:12px;}
-  /* Mobile: hide less-critical columns */
-  .adm-content .card-body{padding:0 !important;}
-}
-
-/* Quick Actions button on mobile */
-@media(max-width:575px){
-  .adm-content .row.g-3 .col-md-3.col-6 a{
-    font-size:11px;padding:10px 8px;
-  }
-}
-
 @keyframes animate-fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .animate-fadeInUp{animation:animate-fadeInUp .32s ease both;}
 
@@ -483,10 +450,7 @@ body{
   .stats-grid{grid-template-columns:repeat(2,1fr) !important;gap:12px;}
 }
 @media(max-width:575px){
-  /* Keep 2 cols on small phones */
-  .stats-grid{grid-template-columns:repeat(2,1fr) !important;gap:10px;}
-  .stat-card{padding:14px 12px;}
-  .stat-number{font-size:18px;}
+  .stats-grid{grid-template-columns:1fr !important;}
 }
 
 /* ─── STATUS BADGES (used by orders page) ─── */

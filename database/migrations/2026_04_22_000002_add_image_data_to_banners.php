@@ -1,23 +1,11 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+/**
+ * No-op: superseded by 2026_04_29_000001_convert_all_images_to_db_storage
+ */
 return new class extends Migration
 {
-    public function up(): void
-    {
-        Schema::table('banners', function (Blueprint $table) {
-            $table->mediumText('image_data')->nullable()->after('image_path');
-            $table->string('mime_type', 50)->nullable()->after('image_data');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('banners', function (Blueprint $table) {
-            $table->dropColumn(['image_data', 'mime_type']);
-        });
-    }
+    public function up(): void {}
+    public function down(): void {}
 };

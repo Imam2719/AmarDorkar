@@ -7,7 +7,6 @@ use App\Models\Category;
 use App\Models\DiscountProduct;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -48,7 +47,7 @@ class ProductController extends Controller
             'price'            => 'required|numeric|min:0',
             'product_type'     => 'nullable|string|max:100',
             'product_size'     => 'nullable|string|max:100',
-            'product_images.*' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
+            'product_images.*' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:51200',
         ]);
 
         $product = Product::create([
@@ -66,18 +65,22 @@ class ProductController extends Controller
             'status'         => $request->boolean('status', true),
         ]);
 
-        // ✅ File storage তে save করুন — base64 DB store বাদ
+        // ✅ Images সরাসরি Database এ store
         if ($request->hasFile('product_images')) {
             $primaryIndex = (int) $request->input('primary_image_index', 0);
 
             foreach ($request->file('product_images') as $index => $file) {
-                $path = $file->store('products', 'public');
-
-                $product->images()->create([
-                    'image_path' => $path,
-                    'sort_order' => $index,
-                    'is_primary' => ($index === $primaryIndex),
-                ]);
+                try {
+                    $product->images()->create([
+                        'image_data' => base64_encode(file_get_contents($file->getRealPath())), // ✅ base64 encode
+                        'mime_type'  => $file->getMimeType(),
+                        'sort_order' => $index,
+                        'is_primary' => ($index === $primaryIndex),
+                    ]);
+                } catch (\Exception $e) {
+                    // Continue with other images if one fails
+                    logger()->error('Product image DB insert failed: ' . $e->getMessage());
+                }
             }
 
             // Fallback: কোনো primary না থাকলে প্রথমটাকে primary করুন
@@ -126,7 +129,7 @@ class ProductController extends Controller
             'name_en'          => 'required|string|max:255',
             'name_bn'          => 'required|string|max:255',
             'price'            => 'required|numeric|min:0',
-            'product_images.*' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
+            'product_images.*' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:51200',
         ]);
 
         $product->update([
@@ -149,9 +152,6 @@ class ProductController extends Controller
             foreach ($request->input('delete_images') as $imgId) {
                 $img = $product->images()->find($imgId);
                 if ($img) {
-                    if ($img->image_path) {
-                        Storage::disk('public')->delete($img->image_path);
-                    }
                     $img->delete();
                 }
             }
@@ -163,13 +163,12 @@ class ProductController extends Controller
             $product->images()->where('id', $request->primary_image_id)->update(['is_primary' => true]);
         }
 
-        // ✅ নতুন image file storage তে save করুন
+        // ✅ নতুন images Database এ store
         if ($request->hasFile('product_images')) {
             $existingCount = $product->images()->count();
             $primaryNewIdx = (int) $request->input('primary_image_index', -1);
 
             foreach ($request->file('product_images') as $index => $file) {
-                $path      = $file->store('products', 'public');
                 $isPrimary = ($primaryNewIdx >= 0 && $index === $primaryNewIdx);
 
                 if ($isPrimary) {
@@ -177,7 +176,8 @@ class ProductController extends Controller
                 }
 
                 $product->images()->create([
-                    'image_path' => $path,
+                    'image_data' => base64_encode(file_get_contents($file->getRealPath())), // ✅ base64 encode
+                    'mime_type'  => $file->getMimeType(),
                     'sort_order' => $existingCount + $index,
                     'is_primary' => $isPrimary,
                 ]);
@@ -192,15 +192,9 @@ class ProductController extends Controller
             }
         }
 
-        $product->update(['image_path' => null]);
-
-        // BUG 4 FIX: Deactivate ALL existing discounts first, then update the active one
-        // or create a new one. Using ->first() previously left old records active.
+        // Discount logic
         if ($request->filled('discount_price') && $request->discount_price < $request->price) {
-            // Deactivate every existing discount record for this product
             $product->discounts()->update(['is_active' => false]);
-
-            // Find the most recent discount to reuse, or create a fresh one
             $discount = $product->discounts()->latest()->first();
             $data = [
                 'original_price' => $request->price,
@@ -216,7 +210,6 @@ class ProductController extends Controller
             }
             $product->update(['discount_price' => $request->discount_price]);
         } else {
-            // Discount removed or price invalid — deactivate all and clear denormalized price
             $product->discounts()->update(['is_active' => false]);
             $product->update(['discount_price' => null]);
         }
@@ -232,14 +225,8 @@ class ProductController extends Controller
             return back()->with('error', "এই পণ্যের {$activeOrders}টি সক্রিয় অর্ডার রয়েছে। প্রথমে অর্ডারগুলো সম্পন্ন করুন।");
         }
         $product->discounts()->delete();
-        // সব image file delete করুন
-        foreach ($product->images as $img) {
-            if ($img->image_path) {
-                Storage::disk('public')->delete($img->image_path);
-            }
-        }
+        // DB থেকে images delete (no file system cleanup needed)
         $product->images()->delete();
-        if ($product->image_path) { Storage::disk('public')->delete($product->image_path); }
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', __('messages.product_deleted'));
     }

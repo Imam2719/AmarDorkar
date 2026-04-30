@@ -10,7 +10,7 @@ class Product extends Model
         'category_id', 'name_bn', 'name_en',
         'description_bn', 'description_en', 'sku',
         'price', 'discount_price', 'stock_quantity',
-        'product_type', 'product_size', 'image_path',
+        'product_type', 'product_size',
         'is_featured', 'is_new_arrival', 'status'
     ];
 
@@ -132,18 +132,25 @@ class Product extends Model
      */
     public function getImageUrlAttribute(): string
     {
-        $primary = $this->primaryImage;
+        // Use eager-loaded primaryImage if available
+        if ($this->relationLoaded('primaryImage') && $this->primaryImage) {
+            return $this->primaryImage->url;
+        }
+
+        // Try any loaded image
+        if ($this->relationLoaded('images') && $this->images->isNotEmpty()) {
+            return $this->images->first()->url;
+        }
+
+        // Fallback: query DB
+        $primary = $this->primaryImage()->first();
         if ($primary) {
             return $primary->url;
         }
 
-        $first = $this->images->first();
+        $first = $this->images()->first();
         if ($first) {
             return $first->url;
-        }
-
-        if ($this->image_path) {
-            return asset('storage/' . $this->image_path);
         }
 
         return asset('images/no-image.png');

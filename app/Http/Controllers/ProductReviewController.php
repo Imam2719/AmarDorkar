@@ -3,7 +3,6 @@ namespace App\Http\Controllers;
 
 use App\Models\ProductReview;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProductReviewController extends Controller
 {
@@ -13,7 +12,7 @@ class ProductReviewController extends Controller
             'product_id'   => 'required|exists:products,id',
             'rating'       => 'required|integer|min:1|max:5',
             'comment'      => 'required|string|min:3|max:1000',
-            'review_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:9072',
+            'review_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:51200',
         ], [
             'comment.required' => app()->getLocale() === 'bn' ? 'মন্তব্য লিখুন।' : 'Comment is required.',
             'comment.min'      => app()->getLocale() === 'bn' ? 'মন্তব্য কমপক্ষে ৩ অক্ষর হতে হবে।' : 'Comment must be at least 3 characters.',
@@ -24,9 +23,8 @@ class ProductReviewController extends Controller
         $userId    = auth()->id();
         $productId = (int) $request->product_id;
 
-        // ── 1. Must have a delivered order containing this product ──
+        // Must have a delivered order containing this product
         $orderId = ProductReview::getDeliveredOrderId($userId, $productId);
-
         if (!$orderId) {
             return back()->with('error',
                 app()->getLocale() === 'bn'
@@ -35,7 +33,7 @@ class ProductReviewController extends Controller
             );
         }
 
-        // ── 2. Already reviewed? ───────────────────────────────────
+        // Already reviewed?
         $alreadyReviewed = ProductReview::where('user_id', $userId)
                                         ->where('product_id', $productId)
                                         ->exists();
@@ -47,21 +45,24 @@ class ProductReviewController extends Controller
             );
         }
 
-        // ── 3. Save image if provided ──────────────────────────────
-        $imagePath = null;
+        // ✅ Review image সরাসরি Database এ store
+        $imageData = null;
+        $mimeType  = null;
         if ($request->hasFile('review_image')) {
-            $imagePath = $request->file('review_image')->store('reviews', 'public');
+            $file      = $request->file('review_image');
+            $imageData = file_get_contents($file->getRealPath());
+            $mimeType  = $file->getMimeType();
         }
 
-        // ── 4. Create review — attach the verified order_id ────────
         ProductReview::create([
-            'product_id'   => $productId,
-            'user_id'      => $userId,
-            'order_id'     => $orderId,          // proven delivered order
-            'rating'       => $request->rating,
-            'comment'      => $request->comment,
-            'review_image' => $imagePath,
-            'is_approved'  => true,
+            'product_id'        => $productId,
+            'user_id'           => $userId,
+            'order_id'          => $orderId,
+            'rating'            => $request->rating,
+            'comment'           => $request->comment,
+            'review_image_data' => $imageData,
+            'review_mime_type'  => $mimeType,
+            'is_approved'       => true,
         ]);
 
         return back()->with('success',
@@ -71,16 +72,12 @@ class ProductReviewController extends Controller
         );
     }
 
-    public function destroy(ProductReview $review)
+    public function destroy(\App\Models\ProductReview $review)
     {
-        if ($review->user_id !== auth()->id()) {
+        if (auth()->id() !== $review->user_id) {
             abort(403);
         }
-        if ($review->review_image) {
-            Storage::disk('public')->delete($review->review_image);
-        }
         $review->delete();
-
         return back()->with('success',
             app()->getLocale() === 'bn' ? 'রিভিউ মুছে ফেলা হয়েছে।' : 'Review deleted.'
         );

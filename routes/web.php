@@ -47,12 +47,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// ── LEGACY IMAGE ROUTES: REMOVED ───────────────────────────────────────────
-// /img/product/{id} এবং /img/banner/{id} routes সরানো হয়েছে।
-// Migration 2026_04_25_000002 দিয়ে image_data columns drop করা হয়েছে,
-// তাই এই routes আর কাজ করত না। সব images এখন storage থেকে serve হয়।
-// Route::get('/img/product/{id}', [ImageController::class, 'product'])->name('image.product');
-// Route::get('/img/banner/{id}',  [ImageController::class, 'banner'])->name('image.banner');
+// ── IMAGE ROUTES: সরাসরি Database থেকে serve ───────────────────────────────
+Route::get('/img/product/{id}', [ImageController::class, 'product'])->name('image.product');
+Route::get('/img/banner/{id}',  [ImageController::class, 'banner'])->name('image.banner');
+Route::get('/img/review/{id}',  [ImageController::class, 'review'])->name('image.review');
 
 // ── ADMIN ROUTES ──────────────────────────────────────────────────────────────
 Route::prefix('admin')->name('admin.')->group(function () {

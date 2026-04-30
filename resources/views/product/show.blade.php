@@ -27,7 +27,7 @@
                         $primaryImg = $product->primaryImage;
                         $mainImgUrl = $primaryImg
                             ? $primaryImg->url
-                            : ($product->image_path ? $product->image_url : null);
+                            : $product->image_url;
                     @endphp
 
                     @if($mainImgUrl)
@@ -257,9 +257,9 @@
                         </div>
                         <p style="font-size:13px;color:var(--muted);margin:0 0 8px;line-height:1.6;" class="bengali-text">{{ $review->comment }}</p>
                         {{-- Review Image --}}
-                        @if($review->review_image)
+                        @if($review->review_image_data)
                         <div style="margin-top:6px;">
-                            <img src="{{ asset('storage/'.$review->review_image) }}"
+                            <img src="{{ route('image.review', $review->id) }}"
                                  style="max-width:120px;border-radius:8px;border:1px solid var(--border);cursor:pointer;"
                                  onclick="window.open(this.src)"
                                  alt="Review photo">
@@ -303,7 +303,7 @@
                         @php
                             $rPrimary = $r->primaryImage;
                             $rImg = $rPrimary ? $rPrimary->url
-                                   : ($r->image_path ? $r->image_url : null);
+                                   : $r->image_url;
                         @endphp
                         @if($rImg)
                             <img src="{{ $rImg }}" alt="{{ $r->name }}" loading="lazy">

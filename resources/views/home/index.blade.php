@@ -124,7 +124,7 @@
                                     // Bug 1 Fixed: $MATCH → $fsp->product->primaryImage->url
                     $fspImgUrl  = $fsp->product->primaryImage?->url;
                 @endphp
-                <div style="min-width:clamp(155px,42vw,180px);max-width:clamp(155px,42vw,180px);background:#fff;border-radius:14px;overflow:hidden;flex-shrink:0;box-shadow:0 4px 20px rgba(0,0,0,.15);">
+                <div style="min-width:180px;max-width:180px;background:#fff;border-radius:14px;overflow:hidden;flex-shrink:0;box-shadow:0 4px 20px rgba(0,0,0,.15);">
                     <div style="position:relative;height:140px;background:#f8f9fa;">
                         {{-- ✅ Bug 1 & 2 Fixed: proper null check, no broken URL fallback --}}
                         @if($fspImgUrl)

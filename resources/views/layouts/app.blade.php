@@ -29,7 +29,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .search-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,158,74,.12);}
 .search-btn{position:absolute;right:5px;top:5px;width:36px;height:36px;background:var(--primary);border:none;border-radius:50%;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,transform .2s;}
 .search-btn:hover{background:var(--primary-dark);transform:scale(1.06);}
-.header-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;overflow:visible;max-width:100%;}
+.header-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .lang-switcher{display:flex;background:var(--surface-2);border-radius:20px;border:1px solid var(--border);padding:2px;gap:2px;}
 .lang-btn{padding:4px 9px;background:transparent;border:none;color:var(--muted);cursor:pointer;text-decoration:none;font-size:11px;font-weight:700;border-radius:16px;transition:all .18s;line-height:1;white-space:nowrap;}
 .lang-btn:hover{color:var(--primary);}
@@ -69,21 +69,23 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .product-col{width:25%;padding:0 8px 16px;}
 @media(min-width:1400px){.product-col{width:16.666%;}}
 @media(max-width:991px){.product-col{width:33.333%;}}
-@media(max-width:767px){.product-col{width:50% !important;padding:0 5px 10px;}}
-/* Never go to 1 col on mobile — always 2 cols */
+@media(max-width:767px){.product-col{width:50%;}}
+@media(max-width:479px){.product-col{width:100%;}}
 .product-grid{display:flex;flex-wrap:wrap;margin:0 -8px;}
-.product-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform .32s cubic-bezier(.4,0,.2,1),box-shadow .32s,border-color .32s;height:100%;display:flex;flex-direction:column;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.product-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(0,0,0,.13);border-color:rgba(26,158,74,.35);}
-.product-img-wrap{position:relative;height:auto;min-height:0;aspect-ratio:1/1;background:var(--surface-2);overflow:hidden;}
-.product-img-wrap img{width:100%;height:100%;object-fit:contain;background:var(--surface-2);transition:transform .42s cubic-bezier(.4,0,.2,1);}
-.product-card:hover .product-img-wrap img{transform:scale(1.05);}
+.product-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform .32s cubic-bezier(.4,0,.2,1),box-shadow .32s,border-color .32s;height:100%;display:flex;flex-direction:column;position:relative;}
+.product-card:hover{transform:translateY(-8px);box-shadow:0 22px 50px rgba(0,0,0,.14);border-color:rgba(26,158,74,.4);}
+.product-img-wrap{position:relative;height:210px;background:var(--surface-2);overflow:hidden;}
+.product-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .42s cubic-bezier(.4,0,.2,1);}
+.product-card:hover .product-img-wrap img{transform:scale(1.07);}
+.product-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;gap:9px;transition:background .28s;}
+.product-card:hover .product-img-overlay{background:rgba(0,0,0,.28);}
 .product-overlay-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;opacity:0;transform:translateY(12px);transition:opacity .25s,transform .25s,background .2s,color .2s;box-shadow:0 3px 12px rgba(0,0,0,.2);}
 .product-overlay-btn:hover{background:var(--primary);color:#fff;}
 .product-card:hover .product-overlay-btn{opacity:1;transform:none;}
 .product-card:hover .product-overlay-btn:nth-child(2){transition-delay:.06s;}
-.product-image{position:relative;height:auto;min-height:0;aspect-ratio:1/1;background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.product-image img{width:100%;height:100%;object-fit:contain;background:var(--surface-2);transition:transform .42s cubic-bezier(.4,0,.2,1);}
-.product-card:hover .product-image img{transform:scale(1.05);}
+.product-image{position:relative;height:210px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.product-image img{width:100%;height:100%;object-fit:cover;transition:transform .42s cubic-bezier(.4,0,.2,1);}
+.product-card:hover .product-image img{transform:scale(1.07);}
 .product-badge{position:absolute;top:9px;right:9px;background:linear-gradient(135deg,#e53935,#b71c1c);color:#fff;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800;box-shadow:0 2px 8px rgba(229,57,53,.45);letter-spacing:.2px;}
 .product-info{padding:14px 13px 13px;flex:1;display:flex;flex-direction:column;}
 .product-name{font-size:14px;font-weight:700;margin-bottom:4px;line-height:1.4;min-height:40px;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
@@ -212,82 +214,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 @media(max-width:480px){.toast-notify{min-width:220px;max-width:calc(100vw - 32px);white-space:normal;}}
 
 .bengali-text{font-family:'Hind Siliguri',sans-serif;}
-/* ── Desktop nav bar ── */
-@media(min-width:992px){.nav-links{display:flex;}}
-
-/* ══════════════════════════════════════════
-   MOBILE RESPONSIVE OVERHAUL
-   ══════════════════════════════════════════ */
-@media(max-width:991px){
-  /* Show nav links as horizontal scrollable strip on tablet/mobile */
-  .nav-links{
-    display:flex !important;
-    overflow-x:auto;
-    scrollbar-width:none;
-    -ms-overflow-style:none;
-  }
-  .nav-links::-webkit-scrollbar{display:none;}
-  .nav-links a{font-size:12px;padding:10px 11px;white-space:nowrap;flex-shrink:0;}
-  .departments-btn{padding:10px 13px;font-size:12.5px;}
-}
-@media(max-width:767px){
-  /* Header layout: logo+controls row1, search row2 */
-  .main-header{flex-wrap:wrap;padding:9px 0;gap:7px;}
-  .main-header > a{order:1;flex-shrink:0;}
-  .header-controls{order:2;margin-left:auto;flex-shrink:0;gap:5px;}
-  .search-wrap{order:3;width:100%;margin:5px 0 0;}
-  .search-input{height:40px;font-size:10px;}
-  .search-btn{right:4px;top:4px;width:32px;height:32px;}
-
-   .main-nav{top:108px !important;}
-  /* Cart sidebar full-width */
-  .cart-sidebar{width:100%;right:-100%;}
-
-  /* Category sidebar full width */
-  .category-sidebar{width:100%;border-radius:0 0 14px 14px;}
-
-  /* ── Product grid: EXACTLY 2 columns on mobile ── */
-  .product-col{width:50% !important;padding:0 5px 12px;}
-  .product-grid{margin:0 -5px;}
-
-  /* ── Product card image: auto height, object-fit:contain, no crop ── */
-  .product-img-wrap,
-  .product-image{
-    height:auto !important;
-    min-height:130px;
-    aspect-ratio:1/1;
-  }
-  .product-img-wrap img,
-  .product-image img{
-    width:100%;
-    height:100%;
-    object-fit:contain !important;
-    background:var(--surface-2);
-  }
-  .product-name{font-size:12.5px;min-height:30px;}
-  .product-price{font-size:14px;margin-bottom:7px;}
-  .product-info{padding:10px 9px 9px;}
-  .product-actions .btn{font-size:10px;padding:5px 5px;}
-  .product-actions{gap:5px;}
-
-  /* Carousel */
-  .carousel-item-custom{min-width:100%;}
-  .discount-card{flex-direction:column;height:auto;text-align:center;padding:16px;}
-  .discount-image{margin:12px 0 0;}
-
-  /* Lang btn */
-  .lang-btn{padding:4px 7px;font-size:10.5px;}
-}
-@media(max-width:479px){
-  .logo-img{height:36px;}
-  .main-header{gap:5px;}
-  .header-controls{gap:4px;}
-  .theme-toggle-btn{width:32px;height:32px;font-size:13px;}
-  .cart-btn{padding:6px 8px;}
-  .product-col{width:50% !important;}
-  .product-info{padding:9px 7px 8px;}
-  .product-actions .btn{font-size:9.5px;padding:5px 4px;}
-}
+@media(max-width:991px){.nav-links{display:none;}}
+@media(max-width:767px){.main-header{flex-wrap:wrap;}.search-wrap{order:3;width:100%;margin:8px 0 0;}.carousel-item-custom{min-width:100%;}.discount-card{flex-direction:column;height:auto;text-align:center;padding:18px;}.discount-image{margin:14px 0 0;}.cart-sidebar{width:100%;right:-100%;}.category-sidebar{width:260px;}}
+@media(max-width:479px){.logo-img{height:40px;}.lang-btn,.theme-btn{padding:5px 8px;}}
 </style>
 @stack('styles')
 </head>
@@ -333,7 +262,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
             @auth
                 {{-- Logged in user: show avatar dropdown --}}
                 <div class="position-relative" id="userMenuWrap">
-                    <button onclick="toggleUserMenu(event)" style="display:flex;align-items:center;gap:7px;background:var(--primary-light);border:1.5px solid var(--primary);color:var(--primary);padding:7px 13px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
+                    <button onclick="toggleUserMenu()" style="display:flex;align-items:center;gap:7px;background:var(--primary-light);border:1.5px solid var(--primary);color:var(--primary);padding:7px 13px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
                         <i class="fas fa-user-circle" style="font-size:16px;"></i>
                         <span class="d-none d-sm-inline">{{ Str::limit(auth()->user()->name, 12) }}</span>
                         <i class="fas fa-chevron-down" style="font-size:10px;"></i>
@@ -616,7 +545,6 @@ function updateLayout(){
 }
 updateLayout();
 window.addEventListener('resize', updateLayout);
-window.addEventListener('load', updateLayout);
 
 /* ── CART POSITIONING ── */
 function positionCart(){
@@ -844,8 +772,7 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ── USER MENU DROPDOWN ── */
-function toggleUserMenu(e){
-    if(e) e.stopPropagation();
+function toggleUserMenu(){
     const d=document.getElementById('userMenuDropdown');
     if(d) d.style.display = d.style.display==='none' ? 'block' : 'none';
 }
@@ -1058,12 +985,12 @@ function handleLoginSubmit(e){
                 const uname = json.user_name.substring(0,12);
                 authArea.innerHTML = `
                 <div class="position-relative" id="userMenuWrap">
-                    <button onclick="toggleUserMenu(event)" style="display:flex;align-items:center;gap:7px;background:var(--primary-light);border:1.5px solid var(--primary);color:var(--primary);padding:7px 13px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
+                    <button onclick="toggleUserMenu()" style="display:flex;align-items:center;gap:7px;background:var(--primary-light);border:1.5px solid var(--primary);color:var(--primary);padding:7px 13px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
                         <i class="fas fa-user-circle" style="font-size:16px;"></i>
                         <span class="d-none d-sm-inline">${uname}</span>
                         <i class="fas fa-chevron-down" style="font-size:10px;"></i>
                     </button>
-                    <div id="userMenuDropdown" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:2000;overflow:hidden;">
+                    <div id="userMenuDropdown" style="display:none;position:absolute;top:calc(100%+6px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:2000;overflow:hidden;">
                         <a href="{{ route('dashboard') }}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:var(--text);text-decoration:none;font-size:13px;border-bottom:1px solid var(--border);">
                             <i class="fas fa-th-large" style="color:var(--primary);width:16px;"></i>
                             {{ app()->getLocale()==='bn' ? 'ড্যাশবোর্ড' : 'Dashboard' }}

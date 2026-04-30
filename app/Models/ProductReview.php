@@ -6,13 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 class ProductReview extends Model
 {
     protected $fillable = [
-        'product_id', 'user_id', 'order_id', 'rating', 'comment', 'review_image', 'is_approved'
+        'product_id', 'user_id', 'order_id', 'rating', 'comment',
+        'review_image_data', 'review_mime_type', 'is_approved'
     ];
 
     protected $casts = [
         'is_approved' => 'boolean',
         'rating'      => 'integer',
     ];
+
+    // Exclude binary data from JSON/serialization
+    protected $hidden = ['review_image_data'];
 
     // ── Relationships ─────────────────────────────────────────
     public function product()
@@ -30,26 +34,19 @@ class ProductReview extends Model
         return $this->belongsTo(Order::class);
     }
 
-    // ── FIX 6: Image URL accessor ─────────────────────────────────────
-    // Provides a consistent way to get the review image URL in views
-    // instead of manually building the path each time.
+    /**
+     * URL to serve review image from the database.
+     */
     public function getImageUrlAttribute(): ?string
     {
-        if (!$this->review_image) {
-            return null;
+        if ($this->review_image_data) {
+            return route('image.review', $this->id);
         }
 
-        // Support both full URLs (e.g. from old data) and storage-relative paths
-        if (str_starts_with($this->review_image, 'http')) {
-            return $this->review_image;
-        }
-
-        return asset('storage/' . $this->review_image);
+        return null;
     }
 
-    // ── Static helper: delivered order id for this user+product ──
-    // Returns the order_id if user has a delivered order containing this product,
-    // otherwise returns null (meaning user cannot review).
+    // ── Static helpers ────────────────────────────────────────
     public static function getDeliveredOrderId(int $userId, int $productId): ?int
     {
         $orderItem = \App\Models\OrderItem::whereHas('order', function ($q) use ($userId) {
@@ -62,9 +59,6 @@ class ProductReview extends Model
         return $orderItem?->order_id;
     }
 
-    // ── Static helper: can this user review this product? ────────
-    // true  → user has a delivered order with this product AND hasn't reviewed yet
-    // false → either not purchased/delivered, or already reviewed
     public static function canUserReview(int $userId, int $productId): bool
     {
         $orderId = self::getDeliveredOrderId($userId, $productId);

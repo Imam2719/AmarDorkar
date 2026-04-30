@@ -8,7 +8,8 @@ class ProductImage extends Model
 {
     protected $fillable = [
         'product_id',
-        'image_path',
+        'image_data',
+        'mime_type',
         'sort_order',
         'is_primary',
     ];
@@ -17,11 +18,11 @@ class ProductImage extends Model
         'is_primary' => 'boolean',
     ];
 
+    // Exclude binary data from serialization / JSON responses
+    protected $hidden = ['image_data'];
 
     /**
-     * FIX: Enforce only one primary image per product.
-     * When a new primary is saved, all others for the same product are unset.
-     * This prevents race conditions that could leave multiple primaries.
+     * Enforce only one primary image per product.
      */
     protected static function booted(): void
     {
@@ -41,12 +42,12 @@ class ProductImage extends Model
     }
 
     /**
-     * Image এর URL। Storage থেকে serve করা হয়।
+     * URL to serve this image from the database.
      */
     public function getUrlAttribute(): string
     {
-        if ($this->image_path) {
-            return asset('storage/' . $this->image_path);
+        if ($this->image_data) {
+            return route('image.product', $this->id);
         }
 
         return asset('images/no-image.png');

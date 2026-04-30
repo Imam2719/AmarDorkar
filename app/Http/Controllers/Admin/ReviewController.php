@@ -57,11 +57,7 @@ class ReviewController extends Controller
 
     public function destroy(ProductReview $review)
     {
-        // Delete review image from storage if it exists
-        if ($review->review_image) {
-            \Illuminate\Support\Facades\Storage::delete($review->review_image);
-        }
-
+        // Image is stored in DB — just delete the record
         $review->delete();
         return back()->with('success', 'রিভিউটি মুছে ফেলা হয়েছে।');
     }

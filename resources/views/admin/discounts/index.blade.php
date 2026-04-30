@@ -33,7 +33,7 @@
           <tr>
             <td>
               <div class="d-flex align-items-center gap-2">
-                @if($discount->product?->image_path)
+                @if($discount->product?->image_url)
                   <img src="{{ $discount->product->image_url }}" style="width:40px;height:40px;object-fit:cover;border-radius:6px">
                 @endif
                 <div>
