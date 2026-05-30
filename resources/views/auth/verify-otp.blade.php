@@ -1,22 +1,23 @@
 <x-guest-layout>
     {{-- ── Header ────────────────────────────────────────────────── --}}
     <div style="text-align:center;margin-bottom:24px;">
-        <div style="width:56px;height:56px;background:linear-gradient(135deg,#1a9e4a,#15803d);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-            <i class="fas fa-key" style="color:#fff;font-size:20px;"></i>
+        <div class="auth-header-icon">
+            <i class="fas fa-key"></i>
         </div>
-        <h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0 0 4px;">OTP যাচাই করুন</h2>
-        <p style="font-size:13px;color:#64748b;margin:0;">
-            <strong style="color:#1a9e4a;">{{ $email }}</strong> এ পাঠানো ৬-সংখ্যার কোড দিন
+        <h2 class="auth-page-title">{{ __('messages.otp_verify_title') }}</h2>
+        <p class="auth-page-subtitle">
+            <strong style="color:var(--auth-link);">{{ $email }}</strong>
+            {{ __('messages.otp_sent_to') }}
         </p>
     </div>
 
     @if(session('status'))
-        <div class="alert alert-success small mb-3" style="border-radius:8px;font-size:13px;">
+        <div class="alert alert-success small mb-3">
             <i class="fas fa-check-circle me-1"></i> {{ session('status') }}
         </div>
     @endif
     @if($errors->any())
-        <div class="alert alert-danger small mb-3" style="border-radius:8px;font-size:13px;">
+        <div class="alert alert-danger small mb-3">
             <i class="fas fa-exclamation-circle me-1"></i> {{ $errors->first() }}
         </div>
     @endif
@@ -24,9 +25,10 @@
     <form method="POST" action="{{ route('user.password.verify-otp') }}">
         @csrf
         <input type="hidden" name="email" value="{{ $email }}">
+        <input type="hidden" name="type" value="{{ $type ?? 'user' }}">
 
         <div class="mb-3">
-            <label class="form-label" style="font-size:13px;font-weight:500;color:#374151;">৬-সংখ্যার OTP কোড</label>
+            <label class="form-label">{{ __('messages.otp_6digit_label') }}</label>
             <input
                 type="text"
                 name="otp"
@@ -37,38 +39,44 @@
                 autocomplete="off"
                 placeholder="000000"
                 class="form-control text-center @error('otp') is-invalid @enderror"
-                style="font-size:32px;font-weight:800;letter-spacing:12px;font-family:monospace;border:2px solid #e2e8f0;border-radius:10px;padding:14px 10px;color:#1a9e4a;">
+                style="font-size:32px;font-weight:800;letter-spacing:12px;font-family:monospace;border-radius:10px;padding:14px 10px;color:var(--auth-link);border:2px solid var(--auth-input-border);background:var(--auth-input-bg);">
             @error('otp')<div class="invalid-feedback text-center" style="font-size:12px;">{{ $message }}</div>@enderror
         </div>
 
         {{-- Countdown timer --}}
-        <div style="text-align:center;font-size:12px;color:#64748b;margin-bottom:16px;">
+        <div style="text-align:center;font-size:12px;color:var(--auth-muted);margin-bottom:16px;">
             <i class="fas fa-clock me-1"></i>
-            OTP মেয়াদ: <span id="countdown" style="font-weight:700;color:#1a9e4a;">10:00</span>
+            {{ __('messages.otp_expiry_label') }}
+            <span id="countdown" style="font-weight:700;color:var(--auth-link);">10:00</span>
         </div>
 
         <button type="submit" class="btn-auth">
-            <i class="fas fa-check-circle me-2"></i>OTP যাচাই করুন
+            <i class="fas fa-check-circle me-2"></i>{{ __('messages.otp_verify_btn') }}
         </button>
     </form>
 
-    <div style="text-align:center;margin-top:18px;font-size:13px;color:#64748b;">
-        OTP পাননি?
-        <a href="{{ route('user.password.forgot') }}" style="color:#1a9e4a;font-weight:500;text-decoration:none;">
-            <i class="fas fa-redo me-1"></i>আবার পাঠান
+    <div class="auth-footer-link">
+        {{ __('messages.otp_not_received') }}
+        <a href="{{ route('user.password.forgot') }}">
+            <i class="fas fa-redo me-1"></i>{{ __('messages.resend_otp') }}
         </a>
     </div>
 
     <script>
-    // 10 min countdown
     let total = 600;
-    const el = document.getElementById('countdown');
+    const el  = document.getElementById('countdown');
+    const expired = '{{ __("messages.otp_expired") }}';
     const t = setInterval(() => {
-        if (total <= 0) { clearInterval(t); el.textContent = 'মেয়াদ শেষ'; el.style.color='#ef4444'; return; }
+        if (total <= 0) {
+            clearInterval(t);
+            el.textContent  = expired;
+            el.style.color  = '#ef4444';
+            return;
+        }
         total--;
-        const m = String(Math.floor(total/60)).padStart(2,'0');
-        const s = String(total%60).padStart(2,'0');
-        el.textContent = m+':'+s;
+        const m = String(Math.floor(total / 60)).padStart(2, '0');
+        const s = String(total % 60).padStart(2, '0');
+        el.textContent = m + ':' + s;
     }, 1000);
     </script>
 </x-guest-layout>

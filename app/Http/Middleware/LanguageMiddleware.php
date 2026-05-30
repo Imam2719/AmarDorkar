@@ -8,7 +8,7 @@ class LanguageMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        $lang = session('language', 'bn');
+        $lang = session('language', 'en');
         app()->setLocale($lang);
         return $next($request);
     }

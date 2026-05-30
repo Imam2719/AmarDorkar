@@ -14,7 +14,7 @@ class CustomerController extends Controller
     {
         $search = $request->input('search', '');
 
-        // ── Registered users from users table ────────────────────────
+        // ── Registered users query ────────────────────────────────────
         $userQuery = User::select(
                 'users.id',
                 'users.name',
@@ -30,7 +30,7 @@ class CustomerController extends Controller
                      ->whereIn('o.status', ['delivered','processing','shipped']);
             })
             ->groupBy('users.id','users.name','users.email','users.mobile','users.created_at')
-            ->orderByDesc('last_order_date');
+            ->orderByDesc(DB::raw('MAX(o.created_at)'));
 
         if ($search) {
             $userQuery->where(function ($q) use ($search) {
@@ -40,7 +40,38 @@ class CustomerController extends Controller
             });
         }
 
-        $users = $userQuery->paginate(20)->withQueryString();
+        // ── AJAX infinite scroll request (skip/take) ──────────────────
+        if ($request->ajax() || $request->wantsJson()) {
+            $page    = (int) $request->input('page', 1);
+            $perPage = 20;
+            $total   = $userQuery->count();
+            $users   = $userQuery->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+            return response()->json([
+                'users' => $users->map(fn($u) => [
+                    'id'              => $u->id,
+                    'name'            => $u->name,
+                    'email'           => $u->email,
+                    'mobile'          => $u->mobile,
+                    'total_orders'    => $u->total_orders,
+                    'total_spent'     => number_format($u->total_spent),
+                    'joined'          => $u->created_at->format('d M Y'),
+                    'last_order_date' => $u->last_order_date
+                        ? \Carbon\Carbon::parse($u->last_order_date)->format('d M Y')
+                        : null,
+                    'orders_url'      => route('admin.customers.orders', $u->id),
+                    'initial'         => strtoupper(substr($u->name, 0, 1)),
+                ]),
+                'total'     => $total,
+                'has_more'  => ($page * $perPage) < $total,
+                'next_page' => $page + 1,
+            ]);
+        }
+
+        // ── Normal page load: প্রথম 20টা server-side (infinite scroll বাকিটা করবে) ──
+        $total   = $userQuery->count();
+        $users   = $userQuery->take(20)->get();
+        $hasMore = $total > 20;
 
         // ── All-time stats (cache 30 min) ─────────────────────────────
         $allStats = Cache::remember('admin_customer_all_stats', 1800, function () {
@@ -65,7 +96,7 @@ class CustomerController extends Controller
             ->get();
         });
 
-        // ── Recent activity (cache 5 min — more real-time) ────────────
+        // ── Recent activity (cache 5 min) ─────────────────────────────
         $recentActivity = Cache::remember('admin_customer_recent', 300, function () {
             return SalesHistory::select(
                 'customer_name','customer_email','product_name','final_amount','selling_time'
@@ -117,7 +148,8 @@ class CustomerController extends Controller
 
         return view('admin.customers.index', compact(
             'users', 'allStats', 'topCustomers', 'recentActivity',
-            'search', 'categoryStats', 'topProductsByCategory'
+            'search', 'categoryStats', 'topProductsByCategory',
+            'total', 'hasMore'
         ));
     }
 

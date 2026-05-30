@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProductImage;
 use App\Models\Banner;
 use App\Models\ProductReview;
+use App\Models\ReturnRequestImage;
 use Illuminate\Http\Response;
 
 class ImageController extends Controller
@@ -39,7 +40,7 @@ class ImageController extends Controller
             ->header('Cache-Control', 'public, max-age=86400');
     }
 
-    public function review(int $id): Response
+    public function review(int $id, int $index = 0): Response
     {
         $review = ProductReview::select('review_image_data', 'review_mime_type')->findOrFail($id);
 
@@ -47,10 +48,36 @@ class ImageController extends Controller
             abort(404);
         }
 
-        $binary = base64_decode($review->review_image_data);
+        $raw = $review->review_image_data;
+
+        // JSON array format (নতুন) নাকি single base64 (পুরনো)?
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            $item = $decoded[$index] ?? $decoded[0];
+            $binary = base64_decode($item['data']);
+            $mime   = $item['mime'] ?? 'image/jpeg';
+        } else {
+            $binary = base64_decode($raw);
+            $mime   = $review->review_mime_type ?? 'image/jpeg';
+        }
 
         return response($binary, 200)
-            ->header('Content-Type', $review->review_mime_type ?? 'image/jpeg')
+            ->header('Content-Type', $mime)
+            ->header('Cache-Control', 'public, max-age=86400');
+    }
+
+    public function returnImage(int $id): Response
+    {
+        $image = ReturnRequestImage::select('image_data', 'mime_type')->findOrFail($id);
+
+        if (!$image->image_data) {
+            abort(404);
+        }
+
+        $binary = base64_decode($image->image_data);
+
+        return response($binary, 200)
+            ->header('Content-Type', $image->mime_type ?? 'image/jpeg')
             ->header('Cache-Control', 'public, max-age=86400');
     }
 }

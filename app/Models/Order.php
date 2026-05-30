@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class Order extends Model
 {
@@ -12,6 +14,8 @@ class Order extends Model
         'shipping_charge', 'subtotal', 'total_amount', 'status',
         'payment_method', 'payment_status', 'admin_notified',
         'admin_notification_time', 'assigned_admin_id',
+        'coupon_id', 'coupon_discount', 'coupon_code',
+        'delivered_at', // ← নতুন
     ];
 
     protected $casts = [
@@ -20,6 +24,8 @@ class Order extends Model
         'shipping_charge'          => 'decimal:2',
         'subtotal'                 => 'decimal:2',
         'total_amount'             => 'decimal:2',
+        'coupon_discount'          => 'decimal:2',
+        'delivered_at'             => 'datetime', // ← নতুন
     ];
 
     // ── Relationships ─────────────────────────────────────────────────
@@ -38,15 +44,55 @@ class Order extends Model
         return $this->belongsTo(Admin::class, 'assigned_admin_id');
     }
 
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
+    }
+
+    public function couponUsage()
+    {
+        return $this->hasOne(CouponUsage::class);
+    }
+
+    public function returnRequests()
+    {
+        return $this->hasMany(ReturnRequest::class);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────
 
-    /**
-     * FIX: Replace uniqid() (microsecond-based, race-condition-prone) with
-     * Str::random(8) — collision-safe and does not depend on timing.
-     */
     public static function generateOrderNumber(): string
     {
         return 'DOL-' . date('Ymd') . '-' . strtoupper(Str::random(8));
+    }
+
+    /**
+     * Return window deadline (7 দিন delivered_at থেকে)।
+     * delivered_at না থাকলে null return করে — সেক্ষেত্রে
+     * ReturnRequestController return allow করবে না।
+     */
+    public function returnDeadline(int $days = 7): ?Carbon
+    {
+        if (!$this->delivered_at) {
+            return null;
+        }
+        return $this->delivered_at->copy()->addDays($days);
+    }
+
+    /**
+     * এখন return request করা যাবে কিনা তা check করে।
+     * Condition: delivered + delivered_at আছে + window শেষ হয়নি
+     */
+    public function canRequestReturn(int $days = 7): bool
+    {
+        if ($this->status !== 'delivered') {
+            return false;
+        }
+        $deadline = $this->returnDeadline($days);
+        if (!$deadline) {
+            return false;
+        }
+        return Carbon::now()->lte($deadline);
     }
 
     // Maps status to Bootstrap badge class (used in views)
@@ -70,7 +116,7 @@ class Order extends Model
             'paid'     => 'success',
             'failed'   => 'danger',
             'refunded' => 'warning',
-            default    => 'secondary',  // pending
+            default    => 'secondary',
         };
     }
 

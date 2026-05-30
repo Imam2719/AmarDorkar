@@ -1,12 +1,9 @@
 @extends('layouts.admin')
-@section('title', 'Banners')
+@section('title', app()->getLocale()==='bn' ? 'ব্যানার ব্যবস্থাপনা' : 'Banner Management')
+@section('page-title', app()->getLocale()==='bn' ? 'ব্যানার ব্যবস্থাপনা' : 'Banner Management')
 
 @section('content')
-<div class="page-header d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h1 class="page-title">{{ app()->getLocale()==='bn' ? 'ব্যানার ম্যানেজমেন্ট' : 'Banner Management' }}</h1>
-        <p class="text-muted small mb-0">{{ app()->getLocale()==='bn' ? 'হোম পেজের ব্যানার স্লাইডার পরিচালনা করুন' : 'Manage homepage banner slider' }}</p>
-    </div>
+<div class="mb-3 d-flex justify-content-end">
     <button class="btn btn-success" onclick="document.getElementById('addBannerModal').style.display='flex'">
         <i class="fas fa-plus me-2"></i>{{ app()->getLocale()==='bn' ? 'নতুন ব্যানার' : 'Add Banner' }}
     </button>

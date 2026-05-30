@@ -8,18 +8,21 @@ use Illuminate\Support\Facades\Auth;
 class AuthController extends Controller
 {
     /**
-     * Old admin login page → redirect to home with popup flag.
+     * Admin login page।
+     * Already logged in হলে dashboard-এ পাঠাও।
      */
     public function showLogin()
     {
-        if (auth('admin')->check()) return redirect()->route('admin.dashboard');
-        if (auth('web')->check())   return redirect()->route('dashboard');
-        return redirect('/')->with('open_login_modal', true);
+        if (auth('admin')->check()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return view('admin.auth.login');
     }
 
     /**
-     * Admin-only login (POST from the old admin form, kept for compatibility).
-     * The main login is now handled by Auth\AuthenticatedSessionController.
+     * Admin login (POST)।
+     * Success হলে intended URL-এ ফেরত যাও, না হলে dashboard।
      */
     public function login(Request $request)
     {
@@ -30,7 +33,10 @@ class AuthController extends Controller
 
         if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->route('admin.dashboard');
+
+            // redirect()->intended() — middleware যে URL save করেছিল সেখানে যাও।
+            // সেটা না থাকলে dashboard-এ যাও।
+            return redirect()->intended(route('admin.dashboard'));
         }
 
         return back()

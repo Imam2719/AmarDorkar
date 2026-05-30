@@ -8,7 +8,7 @@ return new class extends Migration {
         Schema::create('admin_password_resets', function (Blueprint $table) {
             $table->id();
             $table->string('email')->index();
-            $table->string('otp', 6);
+            $table->string('otp');        // hashed — plain 6 char limit সরানো হয়েছে
             $table->timestamp('expires_at');
             $table->boolean('used')->default(false);
             $table->timestamps();

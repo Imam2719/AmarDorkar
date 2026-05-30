@@ -10,23 +10,18 @@ use Illuminate\Validation\Rules\Password;
 
 class AdminManagementController extends Controller
 {
-    /**
-     * Show all admins (super_admin only).
-     */
     public function index()
     {
-        // Only super admins can manage other admins
         if (!auth('admin')->user()->isSuperAdmin()) {
             abort(403, 'Only Super Admins can manage admins.');
         }
 
-        $admins = Admin::orderBy('created_at')->get();
-        return view('admin.admins.index', compact('admins'));
+        $admins   = Admin::orderBy('created_at')->get();
+        $allPerms = Admin::allPermissions();
+
+        return view('admin.admins.index', compact('admins', 'allPerms'));
     }
 
-    /**
-     * Store a new admin.
-     */
     public function store(Request $request)
     {
         if (!auth('admin')->user()->isSuperAdmin()) {
@@ -34,25 +29,30 @@ class AdminManagementController extends Controller
         }
 
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:admins,email',
-            'password' => ['required', 'confirmed', Password::min(8)],
-            'role'     => 'required|in:admin,super_admin',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:admins,email',
+            'password'      => ['required', 'confirmed', Password::min(8)],
+            'role'          => 'required|in:admin,super_admin',
+            'permissions'   => 'nullable|array',
+            'permissions.*' => 'string|in:' . implode(',', array_keys(Admin::allPermissions())),
         ]);
 
+        // Super admin হলে permissions null (full access)
+        $permissions = $request->role === 'super_admin'
+            ? null
+            : ($request->permissions ?? []);
+
         Admin::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'role'     => $request->role,
+            'name'        => $request->name,
+            'email'       => $request->email,
+            'password'    => Hash::make($request->password),
+            'role'        => $request->role,
+            'permissions' => $permissions,
         ]);
 
         return back()->with('success', 'Admin added successfully.');
     }
 
-    /**
-     * Update admin details.
-     */
     public function update(Request $request, Admin $admin)
     {
         if (!auth('admin')->user()->isSuperAdmin()) {
@@ -60,16 +60,23 @@ class AdminManagementController extends Controller
         }
 
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:admins,email,' . $admin->id,
-            'role'     => 'required|in:admin,super_admin',
-            'password' => ['nullable', 'confirmed', Password::min(8)],
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:admins,email,' . $admin->id,
+            'role'          => 'required|in:admin,super_admin',
+            'password'      => ['nullable', 'confirmed', Password::min(8)],
+            'permissions'   => 'nullable|array',
+            'permissions.*' => 'string|in:' . implode(',', array_keys(Admin::allPermissions())),
         ]);
 
+        $permissions = $request->role === 'super_admin'
+            ? null
+            : ($request->permissions ?? []);
+
         $data = [
-            'name'  => $request->name,
-            'email' => $request->email,
-            'role'  => $request->role,
+            'name'        => $request->name,
+            'email'       => $request->email,
+            'role'        => $request->role,
+            'permissions' => $permissions,
         ];
 
         if ($request->filled('password')) {
@@ -81,9 +88,6 @@ class AdminManagementController extends Controller
         return back()->with('success', 'Admin updated successfully.');
     }
 
-    /**
-     * Delete an admin (cannot delete self).
-     */
     public function destroy(Admin $admin)
     {
         if (!auth('admin')->user()->isSuperAdmin()) {

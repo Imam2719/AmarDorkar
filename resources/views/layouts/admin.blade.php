@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title', __('admin.dashboard')) — amardorkar</title>
+<link rel="icon" type="image/png" href="{{ asset('amardorkar.png') }}">
+<link rel="icon" type="image/png" href="{{ asset('amardorkar.png') }}">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -409,14 +411,20 @@ body{
   .adm-stats{grid-template-columns:repeat(2,1fr) !important;gap:12px;}
 }
 @media(max-width:575px){
-  .adm-stats{grid-template-columns:1fr !important;}
-  .adm-topbar{padding:0 14px;}
-  .adm-page-title{font-size:14px;}
+  .adm-stats{grid-template-columns:repeat(2,1fr) !important;}
+  .adm-topbar{padding:0 10px;}
+  .adm-page-title{font-size:13px;}
+  .adm-lang-btn{padding:4px 8px;font-size:10px;}
+  .adm-topbar-btn{width:30px;height:30px;font-size:12px;}
+  .adm-lang-wrap{padding:2px;gap:1px;}
+}
+@media(max-width:400px){
+  .adm-topbar-r{gap:4px;}
 }
 
 /* ─── STAT GRID (used by orders/sales/customers pages) ─── */
 .stats-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;
 }
 .stat-card{
   background:var(--white);border:1px solid var(--border);
@@ -450,7 +458,7 @@ body{
   .stats-grid{grid-template-columns:repeat(2,1fr) !important;gap:12px;}
 }
 @media(max-width:575px){
-  .stats-grid{grid-template-columns:1fr !important;}
+  .stats-grid{grid-template-columns:repeat(2,1fr) !important;}
 }
 
 /* ─── STATUS BADGES (used by orders page) ─── */
@@ -649,91 +657,161 @@ body{
   {{-- Navigation --}}
   <nav class="adm-nav" id="admNav">
 
+    @php $authAdmin = auth('admin')->user(); @endphp
+
+    {{-- ── MAIN ──────────────────────────────────────────── --}}
+    @php
+      $showMain = $authAdmin->hasPermission('dashboard')
+               || $authAdmin->hasPermission('orders')
+               || $authAdmin->hasPermission('products')
+               || $authAdmin->hasPermission('categories');
+    @endphp
+    @if($showMain)
     <div class="adm-nav-group" onclick="toggleNavSection('secMain',this)">
       <span>{{ app()->getLocale()==='bn' ? 'প্রধান' : 'Main' }}</span>
       <i class="fas fa-chevron-down adm-nav-group-arrow"></i>
     </div>
     <div class="adm-nav-section" id="secMain">
 
+    @if($authAdmin->hasPermission('dashboard'))
     <a href="{{ route('admin.dashboard') }}"
        class="adm-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-home"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'ড্যাশবোর্ড' : 'Dashboard' }}</span>
     </a>
+    @endif
 
+    @if($authAdmin->hasPermission('orders'))
     <a href="{{ route('admin.orders.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-shopping-bag"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'অর্ডার' : 'Orders' }}</span>
     </a>
+    @endif
 
+    @if($authAdmin->hasPermission('products'))
     <a href="{{ route('admin.products.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-box-open"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'পণ্য' : 'Products' }}</span>
     </a>
+    @endif
 
+    @if($authAdmin->hasPermission('categories'))
     <a href="{{ route('admin.categories.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-layer-group"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'ক্যাটাগরি' : 'Categories' }}</span>
     </a>
+    @endif
 
     </div>
+    @endif
 
+    {{-- ── MARKETING ──────────────────────────────────────── --}}
+    @php
+      $showMarketing = $authAdmin->hasPermission('discounts')
+                    || $authAdmin->hasPermission('flash_sales')
+                    || $authAdmin->hasPermission('coupons')
+                    || $authAdmin->hasPermission('banners');
+    @endphp
+    @if($showMarketing)
     <div class="adm-nav-group" onclick="toggleNavSection('secMarketing',this)">
       <span>{{ app()->getLocale()==='bn' ? 'মার্কেটিং' : 'Marketing' }}</span>
       <i class="fas fa-chevron-down adm-nav-group-arrow"></i>
     </div>
     <div class="adm-nav-section" id="secMarketing">
 
+    @if($authAdmin->hasPermission('discounts'))
     <a href="{{ route('admin.discounts.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.discounts.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-percent"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'ছাড় / অফার' : 'Discounts' }}</span>
     </a>
+    @endif
 
+    @if($authAdmin->hasPermission('flash_sales'))
     <a href="{{ route('admin.flash-sales.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.flash-sales.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-bolt"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'ফ্ল্যাশ সেল' : 'Flash Sale' }}</span>
     </a>
+    @endif
 
+    @if($authAdmin->hasPermission('coupons'))
+    <a href="{{ route('admin.coupons.index') }}"
+       class="adm-nav-item {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
+      <span class="adm-nav-ic"><i class="fas fa-ticket-alt"></i></span>
+      <span>{{ app()->getLocale()==='bn' ? 'কুপন' : 'Coupons' }}</span>
+    </a>
+    @endif
+
+    @if($authAdmin->hasPermission('banners'))
     <a href="{{ route('admin.banners.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-images"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'ব্যানার' : 'Banners' }}</span>
     </a>
+    @endif
 
     </div>
+    @endif
 
+    {{-- ── REPORTS ─────────────────────────────────────────── --}}
+    @php
+      $showReports = $authAdmin->hasPermission('sales')
+                  || $authAdmin->hasPermission('customers')
+                  || $authAdmin->hasPermission('reviews')
+                  || $authAdmin->hasPermission('returns');
+    @endphp
+    @if($showReports)
     <div class="adm-nav-group" onclick="toggleNavSection('secReports',this)">
       <span>{{ app()->getLocale()==='bn' ? 'রিপোর্ট' : 'Reports' }}</span>
       <i class="fas fa-chevron-down adm-nav-group-arrow"></i>
     </div>
     <div class="adm-nav-section" id="secReports">
 
+    @if($authAdmin->hasPermission('sales'))
     <a href="{{ route('admin.sales.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-chart-line"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'বিক্রয় ইতিহাস' : 'Sales History' }}</span>
     </a>
+    @endif
 
+    @if($authAdmin->hasPermission('customers'))
     <a href="{{ route('admin.customers.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-users"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'গ্রাহক' : 'Customers' }}</span>
     </a>
+    @endif
 
+    @if($authAdmin->hasPermission('reviews'))
     <a href="{{ route('admin.reviews.index') }}"
        class="adm-nav-item {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">
       <span class="adm-nav-ic"><i class="fas fa-star"></i></span>
       <span>{{ app()->getLocale()==='bn' ? 'রিভিউ' : 'Reviews' }}</span>
     </a>
+    @endif
+
+    @if($authAdmin->hasPermission('returns'))
+    <a href="{{ route('admin.returns.index') }}"
+       class="adm-nav-item {{ request()->routeIs('admin.returns.*') ? 'active' : '' }}">
+      <span class="adm-nav-ic"><i class="fas fa-undo-alt"></i></span>
+      <span>{{ app()->getLocale()==='bn' ? 'রিটার্ন / রিফান্ড' : 'Returns & Refunds' }}</span>
+      @php $pendingReturns = \App\Models\ReturnRequest::where('status','pending')->count(); @endphp
+      @if($pendingReturns > 0)
+      <span class="badge bg-warning text-dark ms-1" style="font-size:.68rem;">{{ $pendingReturns }}</span>
+      @endif
+    </a>
+    @endif
 
     </div>
+    @endif
 
-    @if(auth('admin')->user()?->isSuperAdmin())
+    {{-- ── SYSTEM (super_admin only) ───────────────────────── --}}
+    @if($authAdmin->isSuperAdmin())
     <div class="adm-nav-group" onclick="toggleNavSection('secSystem',this)">
       <span>{{ app()->getLocale()==='bn' ? 'সিস্টেম' : 'System' }}</span>
       <i class="fas fa-chevron-down adm-nav-group-arrow"></i>

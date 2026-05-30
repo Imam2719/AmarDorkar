@@ -1,48 +1,47 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendOrderStatusUpdateEmail;
+use App\Jobs\SendOrderStatusWhatsApp;
+use App\Models\FlashSaleProduct;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\SalesHistory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
-    // ── Allowed status flow (same as PHP original) ────────────────────
-    private array $validTransitions = [
-        'pending'    => ['confirmed', 'cancelled'],
-        'confirmed'  => ['processing', 'cancelled'],
-        'processing' => ['shipped', 'cancelled'],
-        'shipped'    => ['delivered', 'cancelled'],
-        'delivered'  => [],
-        'cancelled'  => [],
-    ];
+    private const PER_PAGE = 10;
 
-    // ── LIST ─────────────────────────────────────────────────────────
+    // ── INDEX ─────────────────────────────────────────────────────────
     public function index(Request $request)
     {
+        $perPage      = self::PER_PAGE;
         $search       = $request->input('search', '');
         $statusFilter = $request->input('status', '');
 
-        $query = Order::with(['items.product.images', 'user'])->latest();
+        // Admin sees ALL orders — no user_id filter
+        $orderQuery = Order::with(['items.product.primaryImage', 'user'])
+            ->latest();
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('customer_name',  'like', "%{$search}%")
-                  ->orWhere('customer_email','like', "%{$search}%")
-                  ->orWhere('customer_mobile','like', "%{$search}%")
-                  ->orWhere('order_number',  'like', "%{$search}%");
+            $orderQuery->where(function ($q) use ($search) {
+                $q->where('order_number',     'like', "%{$search}%")
+                  ->orWhere('customer_name',  'like', "%{$search}%")
+                  ->orWhere('customer_email', 'like', "%{$search}%")
+                  ->orWhere('customer_mobile','like', "%{$search}%");
             });
         }
 
         if ($statusFilter) {
-            $query->where('status', $statusFilter);
+            $orderQuery->where('status', $statusFilter);
         }
 
-        $orders = $query->paginate(20)->withQueryString();
-
+        // Stats always reflect all orders, not the current filter
         $stats = [
             'total_orders'    => Order::count(),
             'total_revenue'   => Order::whereNotIn('status', ['cancelled'])->sum('total_amount'),
@@ -51,245 +50,282 @@ class OrderController extends Controller
             'today_orders'    => Order::whereDate('created_at', today())->count(),
         ];
 
-        $success = session()->pull('success');
-        $error   = session()->pull('error');
+        $total   = $orderQuery->count();
+        $orders  = $orderQuery->take($perPage)->get();
+        $hasMore = $total > $perPage;
 
         return view('admin.orders.index', compact(
-            'orders', 'stats', 'search', 'statusFilter', 'success', 'error'
+            'orders', 'hasMore', 'total', 'stats', 'search', 'statusFilter'
         ));
     }
 
-    // ── SHOW (AJAX + full detail page) ────────────────────────────────
+    // ── SHOW ──────────────────────────────────────────────────────────
+    // AJAX (from index modal): returns JSON
+    // Direct URL visit:        returns admin blade
     public function show(Request $request, Order $order)
     {
-        $order->load('items.product.images', 'user');
+        $order->load('items.product.primaryImage', 'user');
 
         if ($request->ajax() || $request->wantsJson()) {
-            $orderData = $order->toArray();
-            // Map items with product_image (accessor not included in toArray)
-            $orderData['items'] = $order->items->map(function ($item) {
-                $arr = $item->toArray();
-                $arr['product_image']  = $item->product ? ($item->product->image_url ?? null) : null;
-                $arr['selected_size']  = $item->selected_size ?? null;
-                $arr['subtotal']       = $item->price * $item->quantity;
-                return $arr;
-            })->values()->toArray();
-
             return response()->json([
                 'success' => true,
-                'order'   => $orderData,
+                'order'   => [
+                    'id'               => $order->id,
+                    'order_number'     => $order->order_number,
+                    'created_at'       => $order->created_at->toISOString(),
+                    'status'           => $order->status,
+                    'payment_method'   => $order->payment_method,
+                    'payment_status'   => $order->payment_status,
+                    'customer_name'    => $order->customer_name,
+                    'customer_email'   => $order->customer_email,
+                    'customer_mobile'  => $order->customer_mobile,
+                    'customer_address' => $order->customer_address,
+                    'shipping_location'=> $order->shipping_location,
+                    'subtotal'         => $order->subtotal,
+                    'shipping_charge'  => $order->shipping_charge,
+                    'coupon_code'      => $order->coupon_code,
+                    'coupon_discount'  => $order->coupon_discount,
+                    'total_amount'     => $order->total_amount,
+                    'items'            => $order->items->map(fn($item) => [
+                        'product_name'  => $item->product_name,
+                        'selected_size' => $item->selected_size,
+                        'quantity'      => $item->quantity,
+                        'price'         => $item->price,
+                        'subtotal'      => $item->subtotal,
+                        'product_image' => $item->product?->image_url,
+                    ]),
+                ],
             ]);
         }
 
         return view('admin.orders.show', compact('order'));
     }
 
-    // ── UPDATE STATUS ─────────────────────────────────────────────────
+    // ── UPDATE STATUS + PAYMENT ───────────────────────────────────────
     public function update(Request $request, Order $order)
     {
         $request->validate([
             'status'         => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled',
-            'payment_status' => 'required|in:pending,paid,failed,refunded',
+            'payment_status' => 'nullable|in:pending,paid,failed,refunded',
         ]);
 
-        $newOrderStatus   = $request->status;
-        $newPaymentStatus = $request->payment_status;
-        $oldOrderStatus   = $order->status;
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
 
-        // Validate transition
-        $error = $this->validateTransition($oldOrderStatus, $newOrderStatus, $newPaymentStatus);
-        if ($error) {
-            return back()->with('error', $error);
+        $data = ['status' => $newStatus];
+
+        if ($request->filled('payment_status')) {
+            $data['payment_status'] = $request->payment_status;
         }
 
-        DB::transaction(function () use ($order, $newOrderStatus, $newPaymentStatus, $request) {
-            $order->update([
-                'status'         => $newOrderStatus,
-                'payment_status' => $newPaymentStatus,
-            ]);
+        // Track delivery timestamp
+        if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
+            $data['delivered_at'] = now();
+        } elseif ($newStatus !== 'delivered' && $oldStatus === 'delivered') {
+            $data['delivered_at'] = null;
+        }
 
-            // When delivered → move to sales_history
-            if ($newOrderStatus === 'delivered' && $order->getOriginal('status') !== 'delivered') {
-                $this->moveToSalesHistory($order, $request->user());
+        DB::transaction(function () use ($order, $data, $newStatus, $oldStatus) {
+            // Restore stock + flash sale qty when cancelling
+            if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
+                $this->restoreStockForOrder($order);
             }
 
-            // FIX 2: When cancelled → restore flash sale sold_quantity and stock
-            if ($newOrderStatus === 'cancelled' && $order->getOriginal('status') !== 'cancelled') {
-                $this->restoreOnCancel($order);
-            }
+            $order->update($data);
         });
 
-        $redirectTo = $request->input('redirect_to') === 'view'
-            ? route('admin.orders.show', $order)
-            : route('admin.orders.index');
+        // Email + WhatsApp customer about status change (non-blocking)
+        if ($oldStatus !== $newStatus) {
+            try {
+                SendOrderStatusUpdateEmail::dispatch($order, $oldStatus, $newStatus, app()->getLocale());
+            } catch (\Exception $e) {
+                Log::error('Order status email failed: ' . $e->getMessage());
+            }
+            try {
+                SendOrderStatusWhatsApp::dispatch($order, $oldStatus, $newStatus);
+            } catch (\Exception $e) {
+                Log::error('Order status WhatsApp failed: ' . $e->getMessage());
+            }
+        }
 
-        return redirect($redirectTo)->with('success', __('messages.order_status_updated'));
+        // redirect_to=view comes from the show page's status form
+        if ($request->input('redirect_to') === 'view') {
+            return redirect()->route('admin.orders.show', $order)
+                ->with('success', app()->getLocale() === 'bn'
+                    ? 'অর্ডার স্ট্যাটাস আপডেট হয়েছে।'
+                    : 'Order status updated.');
+        }
+
+        return redirect()->route('admin.orders.index')
+            ->with('success', app()->getLocale() === 'bn'
+                ? 'অর্ডার স্ট্যাটাস আপডেট হয়েছে।'
+                : 'Order status updated.');
     }
 
-    // ── SELL (mark as sold → move to sales history) ───────────────────
-    // This mirrors the PHP "sell_order" POST action
+    // ── SELL (mark delivered + write sales history) ───────────────────
     public function sell(Request $request, Order $order)
     {
-        if (SalesHistory::where('order_id', $order->id)->exists()) {
-            return back()->with('error', 'এই অর্ডার ইতিমধ্যে বিক্রয় ইতিহাসে রয়েছে।');
+        if (in_array($order->status, ['delivered', 'cancelled'])) {
+            return back()->with('error', app()->getLocale() === 'bn'
+                ? 'এই অর্ডার ইতিমধ্যে সম্পন্ন বা বাতিল।'
+                : 'Order is already completed or cancelled.');
         }
 
-        DB::transaction(function () use ($order, $request) {
-            $this->moveToSalesHistory($order, $request->user());
+        $order->loadMissing('items.product');
+        $oldStatus = $order->status;
+        $adminName = auth('admin')->user()?->name ?? 'Admin';
+
+        DB::transaction(function () use ($order, $adminName) {
+            foreach ($order->items as $item) {
+                SalesHistory::create([
+                    'order_id'           => $order->id,
+                    'product_id'         => $item->product_id,
+                    'product_name'       => $item->product_name,
+                    'product_type'       => $item->product_type,
+                    'product_size'       => $item->selected_size ?? $item->product_size,
+                    'customer_name'      => $order->customer_name,
+                    'customer_email'     => $order->customer_email,
+                    'customer_mobile'    => $order->customer_mobile,
+                    'customer_address'   => $order->customer_address,
+                    'shipping_location'  => $order->shipping_location,
+                    'quantity'           => $item->quantity,
+                    'unit_price'         => $item->price,
+                    'subtotal'           => $item->subtotal,
+                    'is_discounted'      => (bool) ($item->is_discounted ?? false),
+                    'original_price'     => $item->original_price,
+                    'original_unit_price'=> $item->original_price,
+                    'discount_amount'    => $item->discount_amount ?? 0,
+                    'shipping_charge'    => $order->shipping_charge,
+                    'final_amount'       => $order->total_amount,
+                    'order_status'       => 'delivered',
+                    'payment_method'     => $order->payment_method,
+                    'payment_status'     => $order->payment_status ?? 'pending',
+                    'sold_by'            => $adminName,
+                    'delivery_status'    => 'delivered',
+                    'order_time'         => $order->created_at,
+                    'selling_time'       => now(),
+                ]);
+            }
 
             $order->update([
-                'status'         => 'delivered',
-                'payment_status' => 'paid',
+                'status'       => 'delivered',
+                'delivered_at' => now(),
             ]);
         });
 
+        // Email + WhatsApp customer
+        try {
+            SendOrderStatusUpdateEmail::dispatch($order, $oldStatus, 'delivered', app()->getLocale());
+        } catch (\Exception $e) {
+            Log::error('Sell order email failed: ' . $e->getMessage());
+        }
+        try {
+            SendOrderStatusWhatsApp::dispatch($order, $oldStatus, 'delivered');
+        } catch (\Exception $e) {
+            Log::error('Sell order WhatsApp failed: ' . $e->getMessage());
+        }
+
         return redirect()->route('admin.orders.index')
-                         ->with('success', 'অর্ডারটি সফলভাবে বিক্রয় ইতিহাসে স্থানান্তরিত হয়েছে।');
+            ->with('success', app()->getLocale() === 'bn'
+                ? 'অর্ডার #' . $order->order_number . ' বিক্রয় সম্পন্ন হয়েছে।'
+                : 'Order #' . $order->order_number . ' marked as sold.');
     }
 
-    // ── DELETE ────────────────────────────────────────────────────────
-    public function destroy(Order $order)
-    {
-        $order->items()->delete();
-        $order->delete();
-
-        return redirect()->route('admin.orders.index')
-                         ->with('success', __('messages.order_deleted'));
-    }
-
-    // ── BULK STATUS UPDATE ────────────────────────────────────────────
+    // ── BULK UPDATE ───────────────────────────────────────────────────
     public function bulkUpdate(Request $request)
     {
         $request->validate([
-            'order_ids'      => 'required|array',
-            'order_ids.*'    => 'integer|exists:orders,id',
-            'status'         => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled',
-            'payment_status' => 'required|in:pending,paid,failed,refunded',
+            'order_ids'   => 'required|array|min:1',
+            'order_ids.*' => 'integer|exists:orders,id',
+            'status'      => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled',
         ]);
 
-        $updated = 0;
-        $failed  = 0;
+        $newStatus = $request->status;
 
-        foreach ($request->order_ids as $orderId) {
-            $order = Order::find($orderId);
-            if (!$order) { $failed++; continue; }
+        // items eager load করো — N+1 query এড়াতে
+        $orders = Order::whereIn('id', $request->order_ids)
+            ->with('items')
+            ->get();
 
-            $err = $this->validateTransition($order->status, $request->status, $request->payment_status);
-            if ($err) { $failed++; continue; }
+        DB::transaction(function () use ($orders, $newStatus) {
+            foreach ($orders as $order) {
+                $oldStatus = $order->status;
 
-            DB::transaction(function () use ($order, $request) {
-                $order->update([
-                    'status'         => $request->status,
-                    'payment_status' => $request->payment_status,
-                ]);
-                if ($request->status === 'delivered' && $order->getOriginal('status') !== 'delivered') {
-                    $this->moveToSalesHistory($order, $request->user());
+                // Already same status → skip (double-restore এড়াতে)
+                if ($oldStatus === $newStatus) {
+                    continue;
                 }
-                // FIX 2: restore on cancel
-                if ($request->status === 'cancelled' && $order->getOriginal('status') !== 'cancelled') {
-                    $this->restoreOnCancel($order);
+
+                $data = ['status' => $newStatus];
+
+                if ($newStatus === 'delivered' && $oldStatus !== 'delivered') {
+                    $data['delivered_at'] = now();
                 }
-            });
 
-            $updated++;
-        }
+                // Cancel হলে stock + flash sale quota restore করো
+                if ($newStatus === 'cancelled') {
+                    $this->restoreStockForOrder($order);
+                }
 
-        $msg = "{$updated} অর্ডার আপডেট হয়েছে" . ($failed ? ", {$failed}টি ব্যর্থ" : '');
-        return back()->with($failed ? 'warning' : 'success', $msg);
-    }
-
-    // ── PRIVATE: transition validator ─────────────────────────────────
-    private function validateTransition(string $old, string $new, string $paymentStatus): ?string
-    {
-        if ($old !== $new) {
-            $allowed = $this->validTransitions[$old] ?? [];
-            if (!in_array($new, $allowed)) {
-                return "অবৈধ স্ট্যাটাস পরিবর্তন: {$old} থেকে {$new}";
+                $order->update($data);
             }
-        }
+        });
 
-        if ($new === 'delivered' && $paymentStatus !== 'paid') {
-            return 'ডেলিভার্ড অর্ডারের পেমেন্ট স্ট্যাটাস অবশ্যই "পরিশোধিত" হতে হবে।';
-        }
-
-        if ($new === 'cancelled' && $paymentStatus === 'paid') {
-            return 'বাতিল অর্ডারের পেমেন্ট স্ট্যাটাস "পরিশোধিত" হতে পারে না।';
-        }
-
-        return null;
+        return response()->json([
+            'success' => true,
+            'message' => app()->getLocale() === 'bn'
+                ? $orders->count() . 'টি অর্ডার আপডেট হয়েছে।'
+                : $orders->count() . ' orders updated.',
+        ]);
     }
 
-    // ── PRIVATE: restore stock & flash sale quota on cancellation ─────
-    private function restoreOnCancel(Order $order): void
+    // ── PRIVATE: stock + flash sale quota restore ─────────────────────
+    // update() এবং bulkUpdate() দুটোই এই method ব্যবহার করে।
+    // শুধু তখনই call করো যখন oldStatus !== 'cancelled'।
+    private function restoreStockForOrder(\App\Models\Order $order): void
     {
         $order->loadMissing('items');
 
         foreach ($order->items as $item) {
-            // Restore product stock
-            \App\Models\Product::where('id', $item->product_id)
-                ->increment('stock_quantity', $item->quantity);
+            if ($item->product_id) {
+                Product::where('id', $item->product_id)
+                    ->increment('stock_quantity', $item->quantity);
+            }
 
-            // FIX: Use stored flash_sale_product_id so we can restore quota even after
-            // the flash sale has expired (the old code only checked currently active sales)
+            $flashSaleProduct = null;
             if ($item->flash_sale_product_id) {
-                $flashSaleProduct = \App\Models\FlashSaleProduct::find($item->flash_sale_product_id);
-            } else {
-                // Fallback for older orders without flash_sale_product_id
-                $flashSaleProduct = \App\Models\FlashSaleProduct::where('product_id', $item->product_id)
+                $flashSaleProduct = FlashSaleProduct::find($item->flash_sale_product_id);
+            }
+            if (!$flashSaleProduct && $item->product_id) {
+                $flashSaleProduct = FlashSaleProduct::where('product_id', $item->product_id)
                     ->whereHas('flashSale', fn($q) => $q->where('is_active', true))
                     ->first();
             }
-
             if ($flashSaleProduct && $flashSaleProduct->sold_quantity >= $item->quantity) {
                 $flashSaleProduct->decrement('sold_quantity', $item->quantity);
             }
         }
     }
 
-    // ── PRIVATE: move order data to sales_history ─────────────────────
-    private function moveToSalesHistory(Order $order, $admin): void
+    // ── DESTROY ───────────────────────────────────────────────────────
+    public function destroy(Order $order)
     {
-        foreach ($order->items as $item) {
-            SalesHistory::create([
-                'order_id'            => $order->id,
-                'product_id'          => $item->product_id,
-                'product_name'        => $item->product_name,
-                'product_type'        => $item->product_type ?? null,
-                'product_size'        => $item->product_size ?? null,
-                'customer_name'       => $order->customer_name,
-                'customer_email'      => $order->customer_email,
-                'customer_mobile'     => $order->customer_mobile,
-                'customer_address'    => $order->customer_address,
-                'shipping_location'   => $order->shipping_location,
-                'quantity'            => $item->quantity,
-                'unit_price'          => $item->price,
-                // FIX: redundant columns removed — subtotal is canonical (was total_product_amount)
-                'subtotal'            => $item->subtotal,
-                'is_discounted'       => $item->is_discounted ?? false,
-                'original_price'      => $item->original_price ?? $item->price,
-                'shipping_charge'     => $order->shipping_charge,
-                // FIX: final_amount is canonical (was also total_amount)
-                'final_amount'        => $order->total_amount,
-                'discount_amount'     => $item->discount_amount ?? 0,
-                'original_unit_price' => $item->original_price ?? $item->price,
-                'order_status'        => 'delivered',
-                'payment_method'      => $order->payment_method,
-                'payment_status'      => 'completed',
-                'sold_by'             => $admin?->name ?? 'system',
-                'delivery_status'     => 'delivered',
-                'notes'               => 'Completed via orders panel',
-                'order_time'          => $order->created_at,
-                'selling_time'        => now(),
-            ]);
+        // Restore stock for non-terminal orders
+        if (!in_array($order->status, ['cancelled', 'delivered'])) {
+            $order->loadMissing('items');
+            foreach ($order->items as $item) {
+                if ($item->product_id) {
+                    Product::where('id', $item->product_id)
+                        ->increment('stock_quantity', $item->quantity);
+                }
+            }
         }
 
-        // FIX: নতুন sales data এলে customer dashboard cache clear করো
-        Cache::forget('admin_customer_all_stats');
-        Cache::forget('admin_customer_top5');
-        Cache::forget('admin_customer_recent');
-        Cache::forget('admin_category_stats_en');
-        Cache::forget('admin_category_stats_bn');
-        Cache::forget('admin_top_products_by_cat_en');
-        Cache::forget('admin_top_products_by_cat_bn');
+        $order->delete();
+
+        return redirect()->route('admin.orders.index')
+            ->with('success', app()->getLocale() === 'bn'
+                ? 'অর্ডার মুছে ফেলা হয়েছে।'
+                : 'Order deleted.');
     }
 }

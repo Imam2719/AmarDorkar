@@ -12,8 +12,10 @@ class AdminMiddleware
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
             }
-            // Redirect to home with login popup open
-            return redirect('/')->with('open_login_modal', true)
+
+            // redirect()->guest() automatically saves the intended URL in session.
+            // After login, redirect()->intended() will bring the admin back here.
+            return redirect()->guest(route('admin.login'))
                 ->with('error', app()->getLocale() === 'bn'
                     ? 'অনুগ্রহ করে এডমিন হিসেবে লগইন করুন।'
                     : 'Please login as admin to continue.');

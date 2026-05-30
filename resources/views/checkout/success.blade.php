@@ -23,6 +23,54 @@
             </p>
         </div>
 
+        {{-- New Account Created Notice --}}
+        @if(session('new_account_created'))
+        <div style="background:linear-gradient(135deg,#fef3c7,#fffbeb);border:2px solid #f59e0b;border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                <span style="font-size:24px;">🎉</span>
+                <div>
+                    <div style="font-weight:700;font-size:15px;color:#92400e;" class="bengali-text">
+                        {{ app()->getLocale()==='bn' ? 'আপনার অ্যাকাউন্ট তৈরি হয়ে গেছে, আপনি আমাদের ওয়েবসাইটে এখন অটোমেটিক লগইন অবস্থায় আছেন ' : 'Your account has been created,You are now automatically logged in to our website.' }}
+                    </div>
+                    <div style="font-size:12px;color:#a16207;margin-top:2px;" class="bengali-text">
+                        {{ app()->getLocale()==='bn' ? 'অর্ডার ট্র্যাক করতে আপনার ড্যাশবোর্ড এ গিয়ে চেক করুন' : 'To track your order, go to your dashboard and check.' }}
+                    </div>
+                </div>
+            </div>
+            <div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #fde68a;margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-size:13px;color:#78350f;font-weight:600;" class="bengali-text">
+                        {{ app()->getLocale()==='bn' ? 'ইমেইল' : 'Email' }}
+                    </span>
+                    <span style="font-size:13px;color:#1e293b;font-weight:700;">{{ session('account_email') }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:13px;color:#78350f;font-weight:600;" class="bengali-text">
+                        {{ app()->getLocale()==='bn' ? 'পাসওয়ার্ড' : 'Password' }}
+                    </span>
+                    <span style="font-size:15px;color:#1a9e4a;font-weight:800;letter-spacing:1px;font-family:monospace;" id="tempPassDisplay">{{ session('account_temp_password') }}</span>
+                </div>
+            </div>
+            <p style="font-size:12px;color:#92400e;margin:0 0 12px;" class="bengali-text">
+                🔒 {{ app()->getLocale()==='bn' ? 'এই পাসওয়ার্ড আপনার ইমেইলেও পাঠানো হয়েছে। লগইন করে পরে পরিবর্তন করতে পারবেন।' : 'This password has also been sent to your email. You can change it after logging in.' }}
+            </p>
+        </div>
+        @elseif(session('existing_account_login'))
+        <div style="background:linear-gradient(135deg,#e0f2fe,#f0f9ff);border:2px solid #38bdf8;border-radius:14px;padding:18px 24px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:22px;">👋</span>
+                <div>
+                    <div style="font-weight:700;font-size:15px;color:#0369a1;" class="bengali-text">
+                        {{ $order->customer_name }}, {{ app()->getLocale()==='bn' ? 'আপনি স্বয়ংক্রিয়ভাবে লগইন হয়ে গেছেন!' : 'you have been automatically logged in!' }}
+                    </div>
+                    <div style="font-size:12px;color:#0284c7;margin-top:2px;" class="bengali-text">
+                        {{ app()->getLocale()==='bn' ? 'আপনার আগের অ্যাকাউন্ট ব্যবহার করা হয়েছে। অর্ডার ইতিহাস দেখতে ড্যাশবোর্ডে যান।' : 'Your existing account was used. Go to your dashboard to view order history.' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Order Details --}}
         <div style="background:var(--surface);border-radius:14px;padding:24px;border:1px solid var(--border);margin-bottom:20px;">
             <h5 class="bengali-text mb-3" style="font-weight:600;">{{ __('messages.order_summary') }}</h5>

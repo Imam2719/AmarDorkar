@@ -15,8 +15,8 @@ class ProductReview extends Model
         'rating'      => 'integer',
     ];
 
-    // Exclude binary data from JSON/serialization
-    protected $hidden = ['review_image_data'];
+    // review_image_data Blade এ দরকার তাই hidden নয়
+    protected $hidden = [];
 
     // ── Relationships ─────────────────────────────────────────
     public function product()

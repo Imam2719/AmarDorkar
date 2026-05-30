@@ -17,7 +17,8 @@
 .theme-dark{--bg:#111827;--surface:#1f2937;--surface-2:#374151;--text:#f9fafb;--muted:#9ca3af;--border:#4b5563;--card:#1f2937;--light:#374151;--sb-bg:linear-gradient(160deg,#0f2027 0%,#203a43 50%,#2c5364 100%);--qty-bg:#4b5563;--qty-color:#f9fafb;--qty-border:#6b7280;}
 .theme-light{--bg:#f0f4f8;--surface:#ffffff;--surface-2:#f8fafc;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--card:#ffffff;--light:#f8fafc;--sb-bg:linear-gradient(160deg,#0f2027 0%,#203a43 50%,#2c5364 100%);--qty-bg:#ffffff;--qty-color:#1e293b;--qty-border:#cbd5e1;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;overflow-x:hidden;}
+html{width:100%;}
+body{width:100%;overflow-x:hidden;}
 body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',sans-serif;}
 .fw-wrap{width:100%;padding-left:clamp(12px,2vw,32px);padding-right:clamp(12px,2vw,32px);}
 
@@ -30,11 +31,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .search-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,158,74,.12);}
 .search-btn{position:absolute;right:5px;top:5px;width:36px;height:36px;background:var(--primary);border:none;border-radius:50%;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,transform .2s;}
 .search-btn:hover{background:var(--primary-dark);transform:scale(1.06);}
-.header-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.header-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;padding-right:8px;}
 .lang-toggle-btn{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:800;transition:background .18s,color .18s,transform .18s;letter-spacing:-.3px;}
 .lang-toggle-btn:hover{background:var(--primary);color:#fff;transform:rotate(10deg);}
 .theme-switcher{display:none;}
-/* Single theme toggle icon button */
 .theme-toggle-btn{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:background .18s,color .18s,transform .18s;}
 .theme-toggle-btn:hover{background:var(--primary);color:#fff;transform:rotate(20deg);}
 .cart-btn{display:flex;align-items:center;gap:7px;background:var(--light);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;font-size:14px;transition:background .2s,color .2s,transform .2s;}
@@ -69,7 +69,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 @media(min-width:1400px){.product-col{width:16.666%;}}
 @media(max-width:991px){.product-col{width:33.333%;}}
 @media(max-width:767px){.product-col{width:50%;}}
-@media(max-width:479px){.product-col{width:100%;}}
+@media(max-width:479px){.product-col{width:50%;}}
 .product-grid{display:flex;flex-wrap:wrap;margin:0 -8px;}
 .product-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform .32s cubic-bezier(.4,0,.2,1),box-shadow .32s,border-color .32s;height:100%;display:flex;flex-direction:column;position:relative;}
 .product-card:hover{transform:translateY(-8px);box-shadow:0 22px 50px rgba(0,0,0,.14);border-color:rgba(26,158,74,.4);}
@@ -91,12 +91,32 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .product-details-text{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.4;min-height:34px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .product-price{font-size:18px;font-weight:800;color:var(--success);margin-bottom:10px;display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;}
 .original-price-text{text-decoration:line-through;color:var(--muted);font-size:14px;margin-right:6px;}
-.product-actions{display:flex;gap:7px;margin-top:auto;}
+.product-actions{display:flex;gap:6px;margin-top:auto;}
 .product-actions .btn-success{background:linear-gradient(135deg,var(--primary),#0d7a38);border:none;}
 .product-actions .btn-success:hover{background:linear-gradient(135deg,#0d7a38,#0a5a2a);box-shadow:0 4px 14px rgba(26,158,74,.4);}
 .product-actions .btn-outline-success{border-color:var(--primary);color:var(--primary);}
 .product-actions .btn-outline-success:hover{background:var(--primary);color:#fff;}
-.product-actions .btn{flex:1;font-size:11.5px;padding:6px 8px;}
+.product-actions .btn{flex:1;font-size:11px;padding:5px 6px;line-height:1.3;}
+.btn-view{flex:0 0 36px!important;width:36px;height:36px;display:flex;align-items:center;justify-content:center;padding:0!important;border-radius:8px;position:relative;}
+.btn-view .view-label{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;font-size:10px;padding:3px 7px;border-radius:5px;white-space:nowrap;pointer-events:none;}
+.btn-view:hover .view-label{display:block;}
+@media(max-width:767px){
+  .product-img-wrap,.product-image{height:160px;}
+  .product-info{padding:10px 10px 10px;}
+  .product-name{font-size:13px;min-height:36px;}
+  .product-price{font-size:16px;margin-bottom:8px;}
+  .product-actions{gap:4px;justify-content:flex-start;}
+  .product-actions .btn-success{flex:1;min-width:0;overflow:hidden;}
+  .product-actions .btn-success span,.product-actions .btn-success{font-size:10.5px;}
+  .btn-view{flex:0 0 34px!important;width:34px;height:34px;}
+}
+@media(max-width:400px){
+  .product-actions .btn{font-size:10px;padding:4px 5px;}
+  .product-img-wrap,.product-image{height:140px;}
+  .product-name{font-size:12px;min-height:34px;}
+  .product-price{font-size:15px;margin-bottom:6px;}
+  .btn-view{flex:0 0 32px!important;width:32px;height:32px;}
+}
 
 /* DISCOUNT CAROUSEL */
 .discount-carousel{position:relative;overflow:hidden;background:var(--surface);border-radius:14px;padding:16px;margin:24px 0;box-shadow:0 2px 10px rgba(0,0,0,.06);}
@@ -197,6 +217,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 .footer-bottom-links{display:flex;gap:16px;}
 .footer-bottom-links a{font-size:12px;color:var(--muted);text-decoration:none;cursor:pointer;}
 .footer-bottom-links a:hover{color:var(--primary);}
+
 /* TOAST */
 .toast-container{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;}
 .toast-notify{min-width:260px;max-width:380px;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.22);display:flex;align-items:center;gap:12px;pointer-events:all;animation:toastIn .35s cubic-bezier(.34,1.56,.64,1),toastOut .4s ease 2.5s forwards;white-space:nowrap;}
@@ -213,10 +234,103 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 @media(max-width:480px){.toast-notify{min-width:220px;max-width:calc(100vw - 32px);white-space:normal;}}
 
 .bengali-text{font-family:'Hind Siliguri',sans-serif;}
-@media(max-width:991px){.nav-links{display:none;}}
-@media(max-width:767px){.main-header{flex-wrap:wrap;}.search-wrap{order:3;width:100%;margin:8px 0 0;}.carousel-item-custom{min-width:100%;}.discount-card{flex-direction:column;height:auto;text-align:center;padding:18px;}.discount-image{margin:14px 0 0;}.cart-sidebar{width:100%;right:-100%;}.category-sidebar{width:260px;}}
-@media(max-width:479px){.logo-img{height:40px;}.lang-btn,.theme-btn{padding:5px 8px;}}
+@media(max-width:991px){.nav-links{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;}.departments-btn{padding:10px 12px;font-size:13px;gap:5px;}}
+
+/* Mobile search overlay */
+.mobile-search-overlay{display:none;position:fixed;top:0;left:0;right:0;z-index:1100;background:var(--surface);padding:10px 14px;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:slideDown .2s ease;}
+.mobile-search-overlay.show{display:flex;align-items:center;gap:8px;}
+@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:none;opacity:1}}
+.mobile-search-overlay form{flex:1;position:relative;}
+.mobile-search-overlay .mob-search-input{width:100%;height:40px;border:2px solid var(--border);border-radius:20px;padding:0 44px 0 16px;font-size:14px;background:var(--bg);color:var(--text);outline:none;}
+.mobile-search-overlay .mob-search-input:focus{border-color:var(--primary);}
+.mob-search-close{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;}
+
+/* Mobile search icon button */
+.mob-search-btn{display:none;width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);align-items:center;justify-content:center;cursor:pointer;font-size:13px;flex-shrink:0;transition:background .18s,color .18s;}
+.mob-search-btn:hover{background:var(--primary);color:#fff;}
+
+/* ═══ MOBILE HEADER — সব button 36×36px, আলাদা রং ═══ */
+@media(max-width:767px){
+  .main-header{flex-wrap:nowrap;align-items:center;gap:4px;padding:8px 0;}
+  .search-wrap{display:none;}
+  .logo-img{height:36px;flex-shrink:0;}
+  .header-controls{display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:auto;padding-right:8px;}
+
+  /* Search icon — নীল */
+  .mob-search-btn{
+    display:flex;width:36px;height:36px;font-size:14px;border-radius:50%;
+    background:#3b82f6;border-color:#3b82f6;color:#fff;
+  }
+  .mob-search-btn:hover{background:#2563eb;border-color:#2563eb;}
+
+  /* Language toggle — কমলা */
+  .lang-toggle-btn{
+    width:36px;height:36px;font-size:11px;flex-shrink:0;
+    background:#f59e0b;border-color:#f59e0b;color:#fff;
+  }
+  .lang-toggle-btn:hover{background:#d97706;border-color:#d97706;transform:none;}
+
+  /* Theme toggle — বেগুনি */
+  .theme-toggle-btn{
+    width:36px;height:36px;font-size:14px;flex-shrink:0;
+    background:#8b5cf6;border-color:#8b5cf6;color:#fff;
+  }
+  .theme-toggle-btn:hover{background:#7c3aed;border-color:#7c3aed;transform:none;}
+
+  /* Auth button — সবুজ-নীল */
+  #authBtnArea>div>button,#authBtnArea>button{
+    width:36px!important;height:36px!important;
+    padding:0!important;font-size:16px!important;
+    flex-shrink:0;gap:0!important;
+    background:#0ea5e9!important;border:1.5px solid #0ea5e9!important;color:#fff!important;
+    border-radius:50%!important;
+  }
+  #authBtnArea .d-none{display:none!important;}
+  #authBtnArea .fa-chevron-down{display:none!important;}
+
+  /* Cart button — সবুজ (primary), icon only */
+  /* ★ FIX: > span শুধু direct child span লুকায়, badge (.cart-count) লুকায় না */
+  .cart-btn{
+    width:36px;height:36px;padding:0!important;
+    justify-content:center;flex-shrink:0;
+    border-radius:50%;gap:0;min-width:36px;
+    background:#1a9e4a;border-color:#1a9e4a;color:#fff;
+  }
+  .cart-btn > span{display:none;}
+  .cart-icon-wrap{font-size:16px;}
+  .cart-btn:hover{background:#157a39;border-color:#157a39;transform:none;}
+
+  .carousel-item-custom{min-width:100%;}
+  .discount-card{flex-direction:column;height:auto;text-align:center;padding:18px;}
+  .discount-image{margin:14px 0 0;}
+  .cart-sidebar{width:100%;right:-100%;}
+  .category-sidebar{width:260px;}
+}
+
+@media(max-width:360px){
+  .logo-img{height:28px;}
+  .mob-search-btn,.lang-toggle-btn,.theme-toggle-btn{width:30px;height:30px;font-size:10px;}
+  #authBtnArea>div>button,#authBtnArea>button{width:30px!important;height:30px!important;}
+  .cart-btn{width:30px;height:30px;min-width:30px;}
+  .header-controls{gap:3px;padding-right:6px;}
+}
+
+@media(max-width:479px){
+  .departments-btn{padding:10px 10px;font-size:0;}
+  .departments-btn i:first-child{font-size:14px;}
+  .departments-btn i.fa-chevron-down{font-size:9px;}
+  .nav-links a{padding:10px 11px;font-size:12px;}
+}
+
+/* Prevent footer columns from breaking on small screens */
+@media(max-width:575px){
+  .footer-top .row > div{margin-bottom:4px;}
+  .footer-bottom-inner{flex-direction:column;text-align:center;}
+  .footer-bottom-links{justify-content:center;flex-wrap:wrap;gap:8px;}
+  .footer-quick-badge{font-size:11px;padding:5px 10px;}
+}
 </style>
+
 @stack('styles')
 </head>
 
@@ -240,6 +354,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
                 </form>
             </div>
         </div>
+
+        {{-- Mobile search icon (only visible on mobile) --}}
+        <button class="mob-search-btn" onclick="toggleMobileSearch()" title="Search">
+            <i class="fas fa-search"></i>
+        </button>
 
         <div class="header-controls">
             {{-- BUG 2 FIX: Single icon language toggle button (like dark mode) --}}
@@ -333,12 +452,55 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
                 <ul class="nav-links">
                     <li><a href="{{ route('home') }}" {{ request()->routeIs('home') ? 'style=background:rgba(26,158,74,.15);color:var(--primary);font-weight:600;' : '' }}>
                         {{ app()->getLocale()==='bn' ? 'হোম' : 'Home' }}</a></li>
-                    <li><a href="{{ route('new-arrivals') }}" {{ request()->routeIs('new-arrivals') ? 'style=background:rgba(26,158,74,.15);color:var(--primary);font-weight:600;' : '' }}>
-                        {{ app()->getLocale()==='bn' ? 'নতুন আগমন' : 'New Arrivals' }}</a></li>
-                    <li><a href="{{ route('offers') }}" {{ request()->routeIs('offers') ? 'style=background:rgba(26,158,74,.15);color:var(--primary);font-weight:600;' : '' }}>
-                        {{ app()->getLocale()==='bn' ? 'অফার' : 'Offers' }}</a></li>
-                    <li><a href="{{ request()->routeIs('home') ? '#section-flash-sale' : route('home').'#section-flash-sale' }}">
-                        ⚡ {{ app()->getLocale()==='bn' ? 'ফ্ল্যাশ সেল' : 'Flash Sale' }}</a></li>
+                    <li>
+                        @php
+                            $navNewCount = \App\Models\Product::where('status',true)->where('is_new_arrival',true)->count();
+                        @endphp
+                        <a href="{{ route('new-arrivals') }}" {{ request()->routeIs('new-arrivals') ? 'style=background:rgba(26,158,74,.15);color:var(--primary);font-weight:600;' : '' }}
+                           style="display:inline-flex;align-items:center;gap:4px;">
+                            {{ app()->getLocale()==='bn' ? 'নতুন আগমন' : 'New Arrivals' }}
+                            @if($navNewCount > 0)
+                            <span style="background:#6366f1;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;line-height:1.6;">{{ $navNewCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        @php
+                            $navOfferCount = \App\Models\DiscountProduct::where('is_active',true)->where('start_date','<=',now())->where('end_date','>=',now())->count();
+                        @endphp
+                        <a href="{{ route('offers') }}" {{ request()->routeIs('offers') ? 'style=background:rgba(26,158,74,.15);color:var(--primary);font-weight:600;' : '' }}
+                           style="display:inline-flex;align-items:center;gap:4px;">
+                            {{ app()->getLocale()==='bn' ? 'অফার' : 'Offers' }}
+                            @if($navOfferCount > 0)
+                            <span style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;line-height:1.6;">{{ $navOfferCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        @php
+                            // সব active flash sale এর total live product count
+                            $flashCount = 0;
+                            try {
+                                $flashCount = \App\Models\FlashSale::getActive()
+                                    ->sum(fn($fs) => $fs->products->filter(fn($p) => $p->product && $p->remaining > 0)->count());
+                            } catch(\Exception $e) {}
+                        @endphp
+                        @if(request()->routeIs('home'))
+                        <a href="#" onclick="event.preventDefault(); showFlashPanel();" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
+                            ⚡ {{ app()->getLocale()==='bn' ? 'ফ্ল্যাশ সেল' : 'Flash Sale' }}
+                            @if($flashCount > 0)
+                            <span style="background:#dc3545;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;line-height:1.6;">{{ $flashCount }}</span>
+                            @endif
+                        </a>
+                        @else
+                        <a href="{{ route('home') }}?flash=1" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
+                            ⚡ {{ app()->getLocale()==='bn' ? 'ফ্ল্যাশ সেল' : 'Flash Sale' }}
+                            @if($flashCount > 0)
+                            <span style="background:#dc3545;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;line-height:1.6;">{{ $flashCount }}</span>
+                            @endif
+                        </a>
+                        @endif
+                    </li>
                 </ul>
             </div>
         </div>
@@ -365,6 +527,17 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
         </div>
     </div>
     <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+    {{-- Mobile Search Overlay --}}
+    <div class="mobile-search-overlay" id="mobileSearchOverlay">
+        <form action="{{ route('search') }}" method="GET" style="flex:1;position:relative;">
+            <input type="text" name="q" class="mob-search-input"
+                   placeholder="{{ __('messages.search_placeholder') }}"
+                   value="{{ request('q') }}" id="mobileSearchInput">
+            <button type="submit" class="search-btn" style="position:absolute;right:5px;top:50%;transform:translateY(-50%);"><i class="fas fa-search"></i></button>
+        </form>
+        <button class="mob-search-close" onclick="toggleMobileSearch()">×</button>
+    </div>
 </header>
 
 <!-- MAIN -->
@@ -425,7 +598,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
 
                 {{-- Col 1: Brand + Contact --}}
                 <div class="col-lg-4 col-md-6">
-                    <div class="footer-brand-name">আমারদরকার</div>
+                    <div class="footer-brand-name">{{ app()->getLocale()==='bn' ? 'আমারদরকার' : 'amardorkar' }}</div>
                     <div class="footer-brand-tagline bengali-text">{{ app()->getLocale()==='bn' ? 'বিশ্বস্ত অনলাইন শপিং — বাংলাদেশ' : 'Trusted Online Shopping — Bangladesh' }}</div>
 
                     <div class="mt-3">
@@ -501,12 +674,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hind Siliguri',
             </div>
         </div>
     </div>
-
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+function getCsrf(){ return document.querySelector('meta[name="csrf-token"]').content; }
 const NO_IMG = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIHZpZXdCb3g9IjAgMCA3MiA3MiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIGZpbGw9IiNmMWY1ZjkiLz48dGV4dCB4PSIzNiIgeT0iNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5NGEzYjgiIGZvbnQtc2l6ZT0iMTEiPk5vIGltYWdlPC90ZXh0Pjwvc3ZnPg==';
 
 /* ── FIXED HEADER + NAV OFFSET ── */
@@ -519,9 +691,13 @@ function updateLayout(){
     if(nav){
         nav.style.top = headerH + 'px';
         const navH = nav.offsetHeight;
-        if(main) main.style.paddingTop = (headerH + navH) + 'px';
+        const totalOffset = headerH + navH;
+        if(main) main.style.paddingTop = totalOffset + 'px';
+        // Expose as CSS variable so sticky elements can reference it
+        document.documentElement.style.setProperty('--header-total', totalOffset + 'px');
     } else {
         if(main) main.style.paddingTop = headerH + 'px';
+        document.documentElement.style.setProperty('--header-total', headerH + 'px');
     }
 }
 updateLayout();
@@ -609,11 +785,17 @@ function loadCart(){
 
 function cartQty(id,qty){
     if(qty<1){cartRemove(id);return;}
-    fetch('{{ route("cart.update") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':CSRF},body:JSON.stringify({item_id:id,quantity:qty})})
-        .then(r=>r.json()).then(d=>{if(d.success){loadCart();}});
+    // Optimistic UI update
+    const numEl = document.querySelector(`#ci-${id} .qty-num`);
+    if(numEl) numEl.textContent = qty;
+    clearTimeout(window._cartQtyTimer);
+    window._cartQtyTimer = setTimeout(()=>{
+        fetch('{{ route("cart.update") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':getCsrf()},body:JSON.stringify({item_id:id,quantity:qty})})
+            .then(r=>r.json()).then(d=>{if(d.success){loadCart();}});
+    }, 300);
 }
 function cartRemove(id){
-    fetch('{{ route("cart.remove") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':CSRF},body:JSON.stringify({item_id:id})})
+    fetch('{{ route("cart.remove") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':getCsrf()},body:JSON.stringify({item_id:id})})
         .then(r=>r.json()).then(d=>{if(d.success){loadCart();}});
 }
 
@@ -622,7 +804,7 @@ function addToCart(productId, quantity, selectedSize){
     quantity = quantity || 1;
     fetch('{{ route("cart.add") }}',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':CSRF},
+        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':getCsrf()},
         body:JSON.stringify({product_id:productId, quantity:quantity, selected_size:selectedSize||undefined})
     }).then(r=>{
         if(r.status === 401 || r.status === 419){
@@ -661,7 +843,7 @@ function processPendingCartItem(){
 
     fetch('{{ route("cart.add") }}',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':CSRF},
+        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':getCsrf()},
         body:JSON.stringify({product_id:item.product_id, quantity:item.quantity||1, selected_size:item.selected_size||undefined})
     }).then(r=>r.json()).then(d=>{
         if(d.success){
@@ -752,7 +934,26 @@ document.addEventListener('keydown',e=>{
     if(e.key==='Escape') closeLoginModal();
 });
 
-/* ── USER MENU DROPDOWN ── */
+/* ── MOBILE SEARCH ── */
+function toggleMobileSearch(){
+    const overlay = document.getElementById('mobileSearchOverlay');
+    const show = overlay.classList.toggle('show');
+    if(show){
+        setTimeout(()=>document.getElementById('mobileSearchInput').focus(), 100);
+        document.body.style.overflow='hidden';
+    } else {
+        document.body.style.overflow='';
+    }
+}
+document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+        const overlay=document.getElementById('mobileSearchOverlay');
+        if(overlay && overlay.classList.contains('show')){
+            overlay.classList.remove('show');
+            document.body.style.overflow='';
+        }
+    }
+});
 function toggleUserMenu(){
     const d=document.getElementById('userMenuDropdown');
     if(d) d.style.display = d.style.display==='none' ? 'block' : 'none';
@@ -790,13 +991,10 @@ window.addEventListener('load',()=>openLoginModal('register'));
             <button onclick="closeLoginModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;transition:background .15s;" onmouseover="this.style.background='rgba(239,68,68,.1)';this.style.color='#ef4444'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">×</button>
         </div>
 
-        {{-- Tab Buttons --}}
+        {{-- Tab Buttons — শুধু Login tab --}}
         <div style="display:flex;gap:0;padding:16px 24px 0;border-bottom:2px solid var(--border);margin:0 0 0 0;">
             <button id="authTab_login" onclick="switchAuthTab('login')" class="auth-tab-btn active" style="flex:1;padding:10px;background:none;border:none;border-bottom:3px solid transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s;">
                 <i class="fas fa-sign-in-alt me-1"></i>{{ app()->getLocale()==='bn' ? 'লগইন' : 'Login' }}
-            </button>
-            <button id="authTab_register" onclick="switchAuthTab('register')" class="auth-tab-btn" style="flex:1;padding:10px;background:none;border:none;border-bottom:3px solid transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-2px;transition:color .2s,border-color .2s;">
-                <i class="fas fa-user-plus me-1"></i>{{ app()->getLocale()==='bn' ? 'রেজিস্ট্রেশন' : 'Register' }}
             </button>
         </div>
 
@@ -804,10 +1002,6 @@ window.addEventListener('load',()=>openLoginModal('register'));
 
             {{-- ── LOGIN PANE ── --}}
             <div id="authPane_login" class="auth-tab-pane">
-                <p style="font-size:13px;color:var(--muted);margin-bottom:20px;" class="bengali-text">
-                    {{ app()->getLocale()==='bn' ? 'Admin বা User — একই জায়গা থেকে লগইন করুন।' : 'Admin or User — login from the same place.' }}
-                </p>
-
                 @if($errors->any())
                 <div style="background:#fee2e2;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;">
                     <i class="fas fa-exclamation-circle me-1"></i>{{ $errors->first() }}
@@ -849,80 +1043,6 @@ window.addEventListener('load',()=>openLoginModal('register'));
                         {{ app()->getLocale()==='bn' ? 'লগইন করুন' : 'Login' }}
                     </button>
                 </form>
-                <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--muted);" class="bengali-text">
-                    {{ app()->getLocale()==='bn' ? 'নতুন অ্যাকাউন্ট নেই?' : "Don't have an account?" }}
-                    <a href="#" onclick="switchAuthTab('register');return false;" style="color:var(--primary);font-weight:600;text-decoration:none;">
-                        {{ app()->getLocale()==='bn' ? 'রেজিস্ট্রেশন করুন' : 'Register' }}
-                    </a>
-                </p>
-            </div>
-
-            {{-- ── REGISTER PANE ── --}}
-            <div id="authPane_register" class="auth-tab-pane" style="display:none;">
-                @php
-                    $isLoginError = in_array('These credentials do not match our records.', $errors->get('email') ?? []);
-                @endphp
-                @if($errors->hasAny(['name', 'email', 'mobile', 'password']) && !$isLoginError)
-                <div style="background:#fee2e2;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;border:1px solid #fecaca;">
-                    <i class="fas fa-exclamation-circle me-1"></i>
-                    @foreach($errors->all() as $error)
-                        <div>{{ $error }}</div>
-                    @endforeach
-                </div>
-                @endif
-                <form method="POST" action="{{ route('register') }}">
-                    @csrf
-                    <div style="margin-bottom:12px;">
-                        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;" class="bengali-text">{{ app()->getLocale()==='bn' ? 'নাম' : 'Name' }}</label>
-                        <input type="text" name="name" value="{{ old('name') }}" required
-                            style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg);color:var(--text);"
-                            placeholder="{{ app()->getLocale()==='bn' ? 'আপনার নাম' : 'Your name' }}"
-                            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;" class="bengali-text">{{ app()->getLocale()==='bn' ? 'ইমেইল' : 'Email' }}</label>
-                        <input type="email" name="email" value="{{ old('email') }}" required
-                            style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg);color:var(--text);"
-                            placeholder="your@email.com"
-                            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;">{{ app()->getLocale()==='bn' ? 'মোবাইল' : 'Mobile' }}</label>
-                        <input type="text" name="mobile" value="{{ old('mobile') }}"
-                            style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg);color:var(--text);"
-                            placeholder="01XXXXXXXXX"
-                            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
-                    </div>
-                    <div style="display:flex;gap:10px;margin-bottom:12px;">
-                        <div style="flex:1;">
-                            <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;" class="bengali-text">{{ app()->getLocale()==='bn' ? 'পাসওয়ার্ড' : 'Password' }}</label>
-                            <div style="position:relative;">
-                                <input type="password" name="password" id="regPwd" required
-                                    style="width:100%;padding:10px 36px 10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg);color:var(--text);"
-                                    placeholder="••••••••"
-                                    onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
-                                <button type="button" onclick="togglePwd('regPwd',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;"><i class="fas fa-eye"></i></button>
-                            </div>
-                        </div>
-                        <div style="flex:1;">
-                            <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;" class="bengali-text">{{ app()->getLocale()==='bn' ? 'নিশ্চিত করুন' : 'Confirm' }}</label>
-                            <input type="password" name="password_confirmation" required
-                                style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg);color:var(--text);"
-                                placeholder="••••••••"
-                                onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
-                        </div>
-                    </div>
-                    <button type="submit" style="width:100%;background:var(--primary);color:#fff;border:none;padding:12px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s;" onmouseover="this.style.background='var(--primary-dark)'" onmouseout="this.style.background='var(--primary)'">
-                        <i class="fas fa-user-plus"></i>
-                        {{ app()->getLocale()==='bn' ? 'অ্যাকাউন্ট খুলুন' : 'Create Account' }}
-                    </button>
-                </form>
-                <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--muted);" class="bengali-text">
-                    {{ app()->getLocale()==='bn' ? 'ইতিমধ্যে অ্যাকাউন্ট আছে?' : 'Already have an account?' }}
-                    <a href="#" onclick="switchAuthTab('login');return false;" style="color:var(--primary);font-weight:600;text-decoration:none;">
-                        {{ app()->getLocale()==='bn' ? 'লগইন করুন' : 'Login' }}
-                    </a>
-                </p>
             </div>
 
         </div>
@@ -991,7 +1111,7 @@ function handleLoginSubmit(e){
                             {{ app()->getLocale()==='bn' ? 'ড্যাশবোর্ড' : 'Dashboard' }}
                         </a>
                         <form method="POST" action="{{ route('logout') }}" style="margin:0;">
-                            <input type="hidden" name="_token" value="${window.CSRF}">
+                            <input type="hidden" name="_token" value="${getCsrf()}">
                             <button type="submit" style="display:flex;align-items:center;gap:10px;padding:12px 16px;width:100%;background:none;border:none;color:#ef4444;font-size:13px;cursor:pointer;text-align:left;">
                                 <i class="fas fa-sign-out-alt" style="width:16px;"></i>
                                 {{ app()->getLocale()==='bn' ? 'লগআউট' : 'Logout' }}
@@ -1010,7 +1130,7 @@ function handleLoginSubmit(e){
                     setTimeout(()=>{
                         fetch('{{ route("cart.add") }}',{
                             method:'POST',
-                            headers:{'Content-Type':'application/json','X-CSRF-TOKEN':window.CSRF},
+                            headers:{'Content-Type':'application/json','X-CSRF-TOKEN':getCsrf()},
                             body:JSON.stringify({product_id:item.product_id, quantity:item.quantity||1, selected_size:item.selected_size||undefined})
                         }).then(r=>r.json()).then(d=>{
                             if(d.success){
@@ -1061,7 +1181,7 @@ function toggleTheme(){
     // Save to session via AJAX — no reload
     fetch('{{ route("theme.ajax") }}', {
         method: 'POST',
-        headers: {'Content-Type':'application/json','X-CSRF-TOKEN': CSRF},
+        headers: {'Content-Type':'application/json','X-CSRF-TOKEN': getCsrf()},
         body: JSON.stringify({theme: isDark ? 'dark' : 'light'})
     });
 }
@@ -1071,7 +1191,7 @@ function switchLang(lang) {
     // Session-এ save করো AJAX দিয়ে
     fetch('{{ route("language.switch") }}', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest'},
+        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrf(), 'X-Requested-With': 'XMLHttpRequest'},
         body: JSON.stringify({lang: lang})
     }).then(r => r.json()).then(() => {
         // Language switch-এর জন্য page reload দরকার কারণ সব text server-side render

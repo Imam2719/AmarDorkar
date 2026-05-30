@@ -256,13 +256,19 @@
                             <span style="font-size:11px;color:var(--muted);">{{ $review->created_at->diffForHumans() }}</span>
                         </div>
                         <p style="font-size:13px;color:var(--muted);margin:0 0 8px;line-height:1.6;" class="bengali-text">{{ $review->comment }}</p>
-                        {{-- Review Image --}}
+                        {{-- Review Images (supports multiple) --}}
                         @if($review->review_image_data)
-                        <div style="margin-top:6px;">
-                            <img src="{{ route('image.review', $review->id) }}"
-                                 style="max-width:120px;border-radius:8px;border:1px solid var(--border);cursor:pointer;"
+                        @php
+                            $reviewImgs = json_decode($review->review_image_data, true);
+                            $reviewImgCount = is_array($reviewImgs) ? count($reviewImgs) : 1;
+                        @endphp
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                            @for($ri = 0; $ri < $reviewImgCount; $ri++)
+                            <img src="{{ route('image.review', [$review->id, $ri]) }}"
+                                 style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;"
                                  onclick="window.open(this.src)"
-                                 alt="Review photo">
+                                 alt="Review photo {{ $ri + 1 }}">
+                            @endfor
                         </div>
                         @endif
                         {{-- Delete own review --}}

@@ -1,15 +1,15 @@
 <x-guest-layout>
     {{-- ── Header ────────────────────────────────────────────────── --}}
     <div style="text-align:center;margin-bottom:24px;">
-        <div style="width:56px;height:56px;background:linear-gradient(135deg,#1a9e4a,#15803d);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-            <i class="fas fa-shield-alt" style="color:#fff;font-size:20px;"></i>
+        <div class="auth-header-icon">
+            <i class="fas fa-shield-alt"></i>
         </div>
-        <h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0 0 4px;">নতুন পাসওয়ার্ড দিন</h2>
-        <p style="font-size:13px;color:#64748b;margin:0;">কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন</p>
+        <h2 class="auth-page-title">{{ __('messages.new_pwd_title') }}</h2>
+        <p class="auth-page-subtitle">{{ __('messages.new_pwd_subtitle') }}</p>
     </div>
 
     @if($errors->any())
-        <div class="alert alert-danger small mb-3" style="border-radius:8px;font-size:13px;">
+        <div class="alert alert-danger small mb-3">
             <i class="fas fa-exclamation-circle me-1"></i> {{ $errors->first() }}
         </div>
     @endif
@@ -19,11 +19,9 @@
 
         {{-- New Password --}}
         <div class="mb-3">
-            <label class="form-label" style="font-size:13px;font-weight:500;color:#374151;">নতুন পাসওয়ার্ড</label>
-            <div style="position:relative;">
-                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;">
-                    <i class="fas fa-lock" style="font-size:13px;"></i>
-                </span>
+            <label class="form-label">{{ __('messages.new_password') }}</label>
+            <div class="auth-input-wrap">
+                <span class="auth-input-icon"><i class="fas fa-lock"></i></span>
                 <input
                     type="password"
                     name="password"
@@ -31,49 +29,45 @@
                     required
                     autofocus
                     autocomplete="new-password"
-                    placeholder="কমপক্ষে ৮ অক্ষর"
-                    class="form-control @error('password') is-invalid @enderror"
-                    style="padding-left:36px;padding-right:40px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;">
-                <button type="button" onclick="togglePwd('password','eye1')"
-                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;">
-                    <i id="eye1" class="fas fa-eye" style="font-size:14px;"></i>
+                    placeholder="{{ __('messages.min_8_placeholder') }}"
+                    class="form-control auth-input-icon-input @error('password') is-invalid @enderror"
+                    style="padding-right:40px;">
+                <button type="button" class="auth-eye-btn" onclick="togglePwd('password','eye1')">
+                    <i id="eye1" class="fas fa-eye"></i>
                 </button>
-                @error('password')<div class="invalid-feedback" style="font-size:12px;">{{ $message }}</div>@enderror
+                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
         </div>
 
         {{-- Confirm Password --}}
         <div class="mb-3">
-            <label class="form-label" style="font-size:13px;font-weight:500;color:#374151;">পাসওয়ার্ড নিশ্চিত করুন</label>
-            <div style="position:relative;">
-                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;">
-                    <i class="fas fa-lock" style="font-size:13px;"></i>
-                </span>
+            <label class="form-label">{{ __('messages.confirm_password') }}</label>
+            <div class="auth-input-wrap">
+                <span class="auth-input-icon"><i class="fas fa-lock"></i></span>
                 <input
                     type="password"
                     name="password_confirmation"
                     id="password_confirmation"
                     required
                     autocomplete="new-password"
-                    placeholder="আবার পাসওয়ার্ড দিন"
-                    class="form-control @error('password_confirmation') is-invalid @enderror"
-                    style="padding-left:36px;padding-right:40px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;">
-                <button type="button" onclick="togglePwd('password_confirmation','eye2')"
-                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;">
-                    <i id="eye2" class="fas fa-eye" style="font-size:14px;"></i>
+                    placeholder="{{ __('messages.repeat_password_ph') }}"
+                    class="form-control auth-input-icon-input @error('password_confirmation') is-invalid @enderror"
+                    style="padding-right:40px;">
+                <button type="button" class="auth-eye-btn" onclick="togglePwd('password_confirmation','eye2')">
+                    <i id="eye2" class="fas fa-eye"></i>
                 </button>
-                @error('password_confirmation')<div class="invalid-feedback" style="font-size:12px;">{{ $message }}</div>@enderror
+                @error('password_confirmation')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
         </div>
 
         {{-- Strength indicator --}}
-        <div id="strength-bar" style="height:4px;border-radius:4px;background:#e2e8f0;margin-bottom:14px;overflow:hidden;">
-            <div id="strength-fill" style="height:100%;width:0;border-radius:4px;transition:width .3s,background .3s;"></div>
+        <div class="auth-strength-track">
+            <div id="strength-fill" class="auth-strength-fill"></div>
         </div>
-        <p id="strength-text" style="font-size:11px;color:#94a3b8;margin-bottom:10px;text-align:center;"></p>
+        <p id="strength-text" class="auth-strength-text"></p>
 
         <button type="submit" class="btn-auth">
-            <i class="fas fa-save me-2"></i>পাসওয়ার্ড পরিবর্তন করুন
+            <i class="fas fa-save me-2"></i>{{ __('messages.change_password') }}
         </button>
     </form>
 
@@ -91,22 +85,29 @@
     }
 
     // Password strength
+    const labels = [
+        '{{ __("messages.pwd_weak") }}',
+        '{{ __("messages.pwd_fair") }}',
+        '{{ __("messages.pwd_good") }}',
+        '{{ __("messages.pwd_strong") }}'
+    ];
+    const strengthPrefix = '{{ __("messages.pwd_strength_label") }}';
+
     document.getElementById('password').addEventListener('input', function() {
         const val = this.value;
         let score = 0;
-        if (val.length >= 8)  score++;
-        if (/[A-Z]/.test(val)) score++;
-        if (/[0-9]/.test(val)) score++;
+        if (val.length >= 8)       score++;
+        if (/[A-Z]/.test(val))     score++;
+        if (/[0-9]/.test(val))     score++;
         if (/[^A-Za-z0-9]/.test(val)) score++;
 
         const fill   = document.getElementById('strength-fill');
         const text   = document.getElementById('strength-text');
         const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
-        const labels = ['দুর্বল','মোটামুটি','ভালো','শক্তিশালী'];
-        fill.style.width   = (score * 25) + '%';
-        fill.style.background = colors[score-1] || '#e2e8f0';
-        text.textContent   = score > 0 ? 'পাসওয়ার্ড: ' + (labels[score-1]||'') : '';
-        text.style.color   = colors[score-1] || '#94a3b8';
+        fill.style.width      = (score * 25) + '%';
+        fill.style.background = colors[score-1] || 'var(--auth-strength-track)';
+        text.textContent      = score > 0 ? strengthPrefix + ' ' + (labels[score-1] || '') : '';
+        text.style.color      = colors[score-1] || 'var(--auth-muted)';
     });
     </script>
 </x-guest-layout>

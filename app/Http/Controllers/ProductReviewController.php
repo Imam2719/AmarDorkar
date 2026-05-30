@@ -12,7 +12,8 @@ class ProductReviewController extends Controller
             'product_id'   => 'required|exists:products,id',
             'rating'       => 'required|integer|min:1|max:5',
             'comment'      => 'required|string|min:3|max:1000',
-            'review_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:51200',
+            'review_images'   => 'nullable|array|max:5',
+            'review_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
         ], [
             'comment.required' => app()->getLocale() === 'bn' ? 'মন্তব্য লিখুন।' : 'Comment is required.',
             'comment.min'      => app()->getLocale() === 'bn' ? 'মন্তব্য কমপক্ষে ৩ অক্ষর হতে হবে।' : 'Comment must be at least 3 characters.',
@@ -45,13 +46,26 @@ class ProductReviewController extends Controller
             );
         }
 
-        // ✅ Review image সরাসরি Database এ store
+        // ✅ Review images — সব images JSON array হিসেবে store করা হচ্ছে
+        // format: [{"data":"base64...","mime":"image/jpeg"}, ...]
         $imageData = null;
         $mimeType  = null;
-        if ($request->hasFile('review_image')) {
-            $file      = $request->file('review_image');
-            $imageData = file_get_contents($file->getRealPath());
-            $mimeType  = $file->getMimeType();
+        $files = $request->file('review_images') ?? [];
+        if (!is_array($files)) $files = [$files];
+        $files = array_values(array_filter($files));
+
+        if (!empty($files)) {
+            $allImages = [];
+            foreach (array_slice($files, 0, 5) as $file) {
+                $allImages[] = [
+                    'data' => base64_encode(file_get_contents($file->getRealPath())),
+                    'mime' => $file->getMimeType(),
+                ];
+            }
+            // প্রথমটা আলাদাভাবেও রাখি backward compat এর জন্য
+            $mimeType  = $allImages[0]['mime'];
+            // সব images JSON হিসেবে review_image_data তে store
+            $imageData = json_encode($allImages);
         }
 
         ProductReview::create([

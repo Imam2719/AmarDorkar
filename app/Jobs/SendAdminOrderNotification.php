@@ -1,8 +1,11 @@
 <?php
+// PATH: app/Jobs/SendAdminOrderNotification.php
+
 namespace App\Jobs;
 
 use App\Models\Admin;
 use App\Models\Order;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,7 +21,10 @@ class SendAdminOrderNotification implements ShouldQueue
     public int $tries  = 3;
     public int $backoff = 60;
 
-    public function __construct(public Order $order) {}
+    public function __construct(
+        public Order  $order,
+        public string $locale = 'bn'            // ← dispatch করার সময় locale পাঠাও
+    ) {}
 
     public function handle(): void
     {
@@ -26,22 +32,55 @@ class SendAdminOrderNotification implements ShouldQueue
         if ($admins->isEmpty()) return;
 
         $order = $this->order;
+        $isBn  = $this->locale !== 'en';
         $order->loadMissing('items');
 
-        // FIX: Send ONE email with BCC to all admins instead of N separate SMTP calls.
-        // Each new admin added would previously cause N more SMTP calls per order.
+        // ── Dhaka timezone, 12-hour ──────────────────────────────────
+        $orderDateTime = Carbon::parse($order->created_at)
+            ->timezone('Asia/Dhaka')
+            ->format('d M Y, g:i A');
+
+        // ── Labels ───────────────────────────────────────────────────
+        $t = $isBn ? [
+            'brand_sub'   => 'নতুন অর্ডার নোটিফিকেশন',
+            'new_order'   => 'AmardoKar-এ একটি নতুন অর্ডার এসেছে।',
+            'order_lbl'   => '📋 অর্ডার',
+            'customer'    => '👤 গ্রাহক',
+            'items_lbl'   => '📦 পণ্যসমূহ',
+            'col_product' => 'পণ্য',
+            'col_qty'     => 'পরিমাণ',
+            'col_price'   => 'মূল্য',
+            'total'       => 'মোট',
+            'btn'         => '🔍 অর্ডার ম্যানেজমেন্টে যান',
+            'footer'      => 'AmardoKar Admin Notification',
+            'subject'     => '🛒 নতুন অর্ডার: #' . $order->order_number . ' – ৳' . number_format($order->total_amount, 0) . ' | AmardoKar',
+        ] : [
+            'brand_sub'   => 'New Order Notification',
+            'new_order'   => 'A new order has been placed on AmardoKar.',
+            'order_lbl'   => '📋 Order',
+            'customer'    => '👤 Customer',
+            'items_lbl'   => '📦 Products',
+            'col_product' => 'Product',
+            'col_qty'     => 'Qty',
+            'col_price'   => 'Price',
+            'total'       => 'Total',
+            'btn'         => '🔍 Go to Order Management',
+            'footer'      => 'AmardoKar Admin Notification',
+            'subject'     => '🛒 New Order: #' . $order->order_number . ' – ৳' . number_format($order->total_amount, 0) . ' | AmardoKar',
+        ];
+
         try {
-            Mail::send([], [], function ($msg) use ($order, $admins) {
+            Mail::send([], [], function ($msg) use ($order, $admins, $t, $orderDateTime) {
 
                 $itemsHtml = '';
                 foreach ($order->items as $item) {
                     $itemsHtml .= '
                     <tr>
-                      <td style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#1e293b;">'
+                      <td style="padding:10px 8px;border-bottom:1px solid #1e293b;font-size:13px;color:#f1f5f9;">'
                         . e($item->product_name) . '</td>
-                      <td style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:13px;text-align:center;">'
+                      <td style="padding:10px 8px;border-bottom:1px solid #1e293b;font-size:13px;text-align:center;color:#94a3b8;">'
                         . $item->quantity . '</td>
-                      <td style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#1a9e4a;font-weight:700;text-align:right;">৳'
+                      <td style="padding:10px 8px;border-bottom:1px solid #1e293b;font-size:13px;color:#4ade80;font-weight:700;text-align:right;">৳'
                         . number_format($item->subtotal, 0) . '</td>
                     </tr>';
                 }
@@ -50,61 +89,78 @@ class SendAdminOrderNotification implements ShouldQueue
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:32px 16px;">
 <tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="background:#1e293b;border-radius:20px;overflow:hidden;max-width:560px;width:100%;">
+
+  <!-- Header -->
   <tr><td style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:28px 32px;">
     <table width="100%"><tr>
-      <td><div style="font-size:22px;font-weight:900;color:#fff;">🔔 AmardoKar Admin</div>
-          <div style="color:rgba(255,255,255,.85);font-size:13px;margin-top:4px;">নতুন অর্ডার নোটিফিকেশন</div></td>
-      <td style="text-align:right;"><div style="background:rgba(255,255,255,.2);border-radius:12px;padding:8px 16px;">
-        <div style="font-size:11px;color:rgba(255,255,255,.8);text-transform:uppercase;">Total</div>
-        <div style="font-size:22px;font-weight:900;color:#fff;">৳' . number_format($order->total_amount, 0) . '</div>
-      </div></td>
+      <td>
+        <div style="font-size:22px;font-weight:900;color:#fff;">🔔 AmardoKar Admin</div>
+        <div style="color:rgba(255,255,255,.85);font-size:13px;margin-top:4px;">' . $t['brand_sub'] . '</div>
+      </td>
+      <td style="text-align:right;">
+        <div style="background:rgba(255,255,255,.2);border-radius:12px;padding:8px 16px;">
+          <div style="font-size:11px;color:rgba(255,255,255,.8);text-transform:uppercase;">Total</div>
+          <div style="font-size:22px;font-weight:900;color:#fff;">৳' . number_format($order->total_amount, 0) . '</div>
+        </div>
+      </td>
     </tr></table>
   </td></tr>
+
+  <!-- Intro -->
   <tr><td style="padding:24px 32px 0;">
-    <p style="font-size:15px;color:#f1f5f9;margin:0 0 4px;">AmardoKar-এ একটি নতুন অর্ডার এসেছে।</p>
-    <p style="font-size:13px;color:#94a3b8;margin:0;">Order #' . e($order->order_number) . ' · ' . $order->created_at->format('d M Y, h:i A') . '</p>
+    <p style="font-size:15px;color:#f1f5f9;margin:0 0 4px;">' . $t['new_order'] . '</p>
+    <p style="font-size:13px;color:#94a3b8;margin:0;">Order #' . e($order->order_number) . ' · ' . $orderDateTime . '</p>
   </td></tr>
+
+  <!-- Order & Customer cards -->
   <tr><td style="padding:20px 32px 0;">
     <table width="100%"><tr>
       <td width="48%" style="background:#0f172a;border-radius:12px;padding:16px;vertical-align:top;">
-        <div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📋 অর্ডার</div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">' . $t['order_lbl'] . '</div>
         <div style="font-size:18px;font-weight:900;color:#fbbf24;margin-bottom:6px;">#' . e($order->order_number) . '</div>
         <span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">' . strtoupper($order->payment_method ?? 'COD') . '</span>
       </td>
       <td width="4%"></td>
       <td width="48%" style="background:#0f172a;border-radius:12px;padding:16px;vertical-align:top;">
-        <div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">👤 গ্রাহক</div>
+        <div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">' . $t['customer'] . '</div>
         <div style="font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:4px;">' . e($order->customer_name) . '</div>
         <div style="font-size:12px;color:#94a3b8;">📞 ' . e($order->customer_mobile ?? '') . '</div>
         <div style="font-size:12px;color:#94a3b8;">📍 ' . e($order->customer_address ?? '') . '</div>
       </td>
     </tr></table>
   </td></tr>
+
+  <!-- Items -->
   <tr><td style="padding:20px 32px 0;">
-    <div style="font-size:12px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📦 পণ্যসমূহ</div>
+    <div style="font-size:12px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">' . $t['items_lbl'] . '</div>
     <table width="100%" style="background:#0f172a;border-radius:12px;overflow:hidden;">
       <thead><tr style="background:#1e293b;">
-        <th style="font-size:11px;color:#64748b;padding:10px 8px;text-align:left;border-bottom:1px solid #334155;">পণ্য</th>
-        <th style="font-size:11px;color:#64748b;padding:10px 8px;text-align:center;border-bottom:1px solid #334155;">পরিমাণ</th>
-        <th style="font-size:11px;color:#64748b;padding:10px 8px;text-align:right;border-bottom:1px solid #334155;">মূল্য</th>
+        <th style="font-size:11px;color:#64748b;padding:10px 8px;text-align:left;border-bottom:1px solid #334155;">' . $t['col_product'] . '</th>
+        <th style="font-size:11px;color:#64748b;padding:10px 8px;text-align:center;border-bottom:1px solid #334155;">' . $t['col_qty'] . '</th>
+        <th style="font-size:11px;color:#64748b;padding:10px 8px;text-align:right;border-bottom:1px solid #334155;">' . $t['col_price'] . '</th>
       </tr></thead>
       <tbody>' . $itemsHtml . '</tbody>
       <tfoot><tr>
-        <td colspan="2" style="padding:12px 8px;font-weight:800;color:#f1f5f9;border-top:2px solid #334155;">মোট</td>
+        <td colspan="2" style="padding:12px 8px;font-weight:800;color:#f1f5f9;border-top:2px solid #334155;">' . $t['total'] . '</td>
         <td style="padding:12px 8px;font-size:16px;font-weight:900;color:#4ade80;text-align:right;border-top:2px solid #334155;">৳' . number_format($order->total_amount, 0) . '</td>
       </tr></tfoot>
     </table>
   </td></tr>
+
+  <!-- CTA -->
   <tr><td style="padding:24px 32px;text-align:center;">
-    <a href="' . url('/admin/orders') . '" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;text-decoration:none;padding:14px 36px;border-radius:12px;font-size:14px;font-weight:700;">🔍 অর্ডার ম্যানেজমেন্টে যান</a>
+    <a href="' . url('/admin/orders') . '" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;text-decoration:none;padding:14px 36px;border-radius:12px;font-size:14px;font-weight:700;">' . $t['btn'] . '</a>
   </td></tr>
+
+  <!-- Footer -->
   <tr><td style="padding:16px 32px;text-align:center;border-top:1px solid #334155;">
-    <p style="font-size:11px;color:#475569;margin:0;">AmardoKar Admin Notification · © ' . date('Y') . '</p>
+    <p style="font-size:11px;color:#475569;margin:0;">' . $t['footer'] . ' · © ' . date('Y') . '</p>
   </td></tr>
+
 </table></td></tr></table>
 </body></html>';
 
-                // First admin is primary To, rest are BCC
+                // First admin = To, rest = BCC
                 $firstAdmin = $admins->first();
                 $msg->to($firstAdmin->email, $firstAdmin->name);
 
@@ -112,8 +168,7 @@ class SendAdminOrderNotification implements ShouldQueue
                     $msg->bcc($admin->email, $admin->name);
                 }
 
-                $msg->subject('🛒 নতুন অর্ডার: #' . $order->order_number . ' – ৳' . number_format($order->total_amount, 0) . ' | AmardoKar')
-                    ->html($html);
+                $msg->subject($t['subject'])->html($html);
             });
         } catch (\Exception $e) {
             Log::error('Admin order notification failed: ' . $e->getMessage());

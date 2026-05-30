@@ -13,8 +13,9 @@ use App\Http\Controllers\Auth\UserPasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    // Registration সরিয়ে দেওয়া হয়েছে — checkout এ automatic account তৈরি হয়
+    Route::get('register', fn() => redirect('/')->with('info', 'অর্ডার দিলে স্বয়ংক্রিয়ভাবে অ্যাকাউন্ট তৈরি হয়।'))->name('register');
+    Route::post('register', fn() => redirect('/'));
 
     // Unified login — popup-based
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -22,9 +23,9 @@ Route::middleware('guest')->group(function () {
 
     // ── OTP-based password reset for users ──────────────────────────
     Route::get('forgot-password',  [UserPasswordResetController::class, 'showForgotForm'])->name('user.password.forgot');
-    Route::post('forgot-password', [UserPasswordResetController::class, 'sendOtp'])->name('user.password.send-otp')->middleware('throttle:3,5');
+    Route::post('forgot-password', [UserPasswordResetController::class, 'sendOtp'])->name('user.password.send-otp')->middleware('throttle:20,5');
     Route::get('verify-otp',       [UserPasswordResetController::class, 'showOtpForm'])->name('user.password.otp-form');
-    Route::post('verify-otp',      [UserPasswordResetController::class, 'verifyOtp'])->name('user.password.verify-otp')->middleware('throttle:10,1');
+    Route::post('verify-otp',      [UserPasswordResetController::class, 'verifyOtp'])->name('user.password.verify-otp')->middleware('throttle:20,1');
     Route::get('reset-password',   [UserPasswordResetController::class, 'showResetForm'])->name('user.password.reset-form');
     Route::post('reset-password',  [UserPasswordResetController::class, 'resetPassword'])->name('user.password.reset');
 
@@ -34,8 +35,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)->name('verification.notice');
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)->middleware(['signed','throttle:6,1'])->name('verification.verify');
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->middleware('throttle:6,1')->name('verification.send');
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)->middleware(['signed','throttle:20,1'])->name('verification.verify');
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->middleware('throttle:20,1')->name('verification.send');
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');

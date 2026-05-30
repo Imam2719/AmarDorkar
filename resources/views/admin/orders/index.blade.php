@@ -64,9 +64,9 @@
     </button>
   </div>
   <div class="card-body p-0">
-    <div class="table-responsive">
+    <div class="table-responsive" style="max-height:580px;overflow-y:auto;">
       <table class="table table-hover mb-0">
-        <thead>
+        <thead style="position:sticky;top:0;z-index:2;background:var(--surface,#fff);">
           <tr>
             <th>{{ app()->getLocale()==='bn' ? 'অর্ডার #' : 'Order #' }}</th>
             <th>{{ app()->getLocale()==='bn' ? 'গ্রাহক' : 'Customer' }}</th>
@@ -122,8 +122,8 @@
               </span>
             </td>
             <td>
-              {{ $order->created_at->format('M d, Y') }}<br>
-              <small class="text-muted">{{ $order->created_at->format('H:i') }}</small>
+              {{ $order->created_at->timezone('Asia/Dhaka')->format('M d, Y') }}<br>
+              <small class="text-muted">{{ $order->created_at->timezone('Asia/Dhaka')->format('h:i A') }}</small>
             </td>
             <td>
               <div class="btn-group" role="group">
@@ -165,11 +165,6 @@
     </div>
 
     {{-- Pagination --}}
-    @if($orders->hasPages())
-    <div class="p-3 border-top">
-      {{ $orders->withQueryString()->links() }}
-    </div>
-    @endif
   </div>
 </div>
 
@@ -363,10 +358,26 @@ function viewOrder(id) {
           </table>
         </div>
         <hr class="my-2">
-        <div class="d-flex justify-content-between p-3 rounded" style="background:rgba(21,128,61,.12);">
-          <span class="bengali-text text-muted">${isBn?'ডেলিভারি চার্জ':'Shipping'}: <strong>৳${Number(o.shipping_charge).toLocaleString()}</strong></span>
-          <span class="text-success fw-bold fs-6">${isBn?'মোট':'Total'}: ৳${Number(o.total_amount).toLocaleString()}</span>
-        </div>
+        <h6 class="bengali-text fw-bold mb-2">${isBn?'বিল বিস্তারিত':'Bill Details'}</h6>
+        <table class="table table-sm" style="max-width:400px;margin-left:auto;">
+          <tr>
+            <td class="text-muted">${isBn?'সাবটোটাল':'Subtotal'}</td>
+            <td class="text-end">৳${Number(o.subtotal).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td class="text-muted">${isBn?'ডেলিভারি চার্জ':'Shipping Charge'}</td>
+            <td class="text-end">৳${Number(o.shipping_charge).toLocaleString()}</td>
+          </tr>
+          ${(o.coupon_discount && Number(o.coupon_discount) > 0) ? `
+          <tr>
+            <td style="color:#16a34a;">🎟 ${isBn?'কুপন ছাড়':'Coupon Discount'}${o.coupon_code ? ` (${o.coupon_code})` : ''}</td>
+            <td class="text-end" style="color:#16a34a;">-৳${Number(o.coupon_discount).toLocaleString()}</td>
+          </tr>` : ''}
+          <tr style="border-top:2px solid #475569;">
+            <td class="fw-bold">${isBn?'সর্বমোট':'Grand Total'}</td>
+            <td class="text-end fw-bold text-success fs-6">৳${Number(o.total_amount).toLocaleString()}</td>
+          </tr>
+        </table>
       `;
     })
     .catch(() => { content.innerHTML = '<div class="alert alert-danger">Failed to load order details</div>'; });

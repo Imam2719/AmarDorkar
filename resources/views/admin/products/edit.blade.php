@@ -250,42 +250,40 @@
 <script>
 const IS_BN = {{ app()->getLocale() === 'bn' ? 'true' : 'false' }};
 const MAX_IMAGES = 8;
+
+// newFiles = array of {file, base64, mimeType}
 let newFiles = [];
 
 const input      = document.getElementById('imageInput');
 const newGrid    = document.getElementById('newImageGrid');
 const primaryIdx = document.getElementById('primaryNewIndexInput');
+const theForm    = input.closest('form');
 
-// Existing image — thumbnail radio visual update
+// ── Existing image — thumbnail radio visual update ─────────────────
 document.querySelectorAll('input[name="primary_image_id"]').forEach(radio => {
     radio.addEventListener('change', function() {
-        // Reset all borders and badges
         document.querySelectorAll('input[name="primary_image_id"]').forEach(r => {
-            const id = r.value;
-            const border = document.getElementById('imgBorder' + id);
-            const badge  = document.getElementById('badge'    + id);
+            const border = document.getElementById('imgBorder' + r.value);
+            const badge  = document.getElementById('badge'    + r.value);
             if (border) border.style.borderColor = '#dee2e6';
             if (badge)  badge.style.display = 'none';
         });
-        // Highlight selected
-        const selId = this.value;
-        const border = document.getElementById('imgBorder' + selId);
-        const badge  = document.getElementById('badge'    + selId);
+        const border = document.getElementById('imgBorder' + this.value);
+        const badge  = document.getElementById('badge'    + this.value);
         if (border) border.style.borderColor = '#0d6efd';
-        if (badge)  { badge.style.display = 'block'; }
-        // Clear new image primary when existing is chosen
+        if (badge)  badge.style.display = 'block';
         primaryIdx.value = -1;
         renderNewGrid();
     });
 });
 
-// Mark deleted images visually
+// ── Mark deleted images visually ────────────────────────────────────
 function toggleDeleteMark(id, checked) {
     const card = document.getElementById('imgCard' + id);
     if (card) card.style.opacity = checked ? '.35' : '1';
 }
 
-// New file input
+// ── File input change & drag-drop ────────────────────────────────────
 input.addEventListener('change', function() {
     addFiles(Array.from(this.files));
     this.value = '';
@@ -298,32 +296,38 @@ function handleDrop(e) {
 }
 
 function addFiles(files) {
+    let added = 0;
     for (const file of files) {
         if (newFiles.length >= MAX_IMAGES) break;
         if (file.size > 5 * 1024 * 1024) {
             alert((IS_BN ? 'সর্বোচ্চ ৫MB: ' : 'Max 5MB: ') + file.name);
             continue;
         }
-        newFiles.push(file);
+        // Read as base64 immediately
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl  = e.target.result;                    // data:image/jpeg;base64,/9j/...
+            const b64      = dataUrl.split(',')[1];              // pure base64
+            const mimeType = file.type;
+            newFiles.push({ file, base64: b64, mimeType, dataUrl });
+            renderNewGrid();
+        };
+        reader.readAsDataURL(file);
+        added++;
     }
-    syncInput();
-    renderNewGrid();
 }
 
 function removeNewFile(idx) {
     newFiles.splice(idx, 1);
     let pi = parseInt(primaryIdx.value);
     if (pi >= newFiles.length) primaryIdx.value = -1;
-    syncInput();
     renderNewGrid();
 }
 
 function setNewPrimary(idx) {
     primaryIdx.value = idx;
-    // Uncheck existing primary radio
-    document.querySelectorAll('input[name="primary_image_id"]').forEach(r => r.checked = false);
-    // Reset existing borders
     document.querySelectorAll('input[name="primary_image_id"]').forEach(r => {
+        r.checked = false;
         const border = document.getElementById('imgBorder' + r.value);
         const badge  = document.getElementById('badge'    + r.value);
         if (border) border.style.borderColor = '#dee2e6';
@@ -332,41 +336,58 @@ function setNewPrimary(idx) {
     renderNewGrid();
 }
 
-function syncInput() {
-    const dt = new DataTransfer();
-    newFiles.forEach(f => dt.items.add(f));
-    input.files = dt.files;
-}
-
 function renderNewGrid() {
     newGrid.innerHTML = '';
     const pi = parseInt(primaryIdx.value);
-    newFiles.forEach((file, idx) => {
-        const reader = new FileReader();
-        reader.onload = e => {
-            const isPrimary = idx === pi;
-            const card = document.createElement('div');
-            card.style.cssText = 'position:relative;width:110px;flex-shrink:0;';
-            card.innerHTML = `
-                <div style="width:110px;height:110px;border-radius:10px;overflow:hidden;
-                     border:3px solid ${isPrimary ? '#0d6efd' : '#dee2e6'};cursor:pointer;"
-                     onclick="setNewPrimary(${idx})">
-                    <img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">
-                    ${isPrimary ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(13,110,253,.85);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px;">
-                        <i class="fas fa-star"></i> Thumbnail</div>` : ''}
-                </div>
-                <button type="button" onclick="removeNewFile(${idx})"
-                    style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#dc3545;border:none;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:110px;">
-                    ${file.name}
-                </div>`;
-            newGrid.appendChild(card);
-        };
-        reader.readAsDataURL(file);
+    newFiles.forEach((item, idx) => {
+        const isPrimary = idx === pi;
+        const card = document.createElement('div');
+        card.style.cssText = 'position:relative;width:110px;flex-shrink:0;';
+        card.innerHTML = `
+            <div style="width:110px;height:110px;border-radius:10px;overflow:hidden;
+                 border:3px solid ${isPrimary ? '#0d6efd' : '#dee2e6'};cursor:pointer;"
+                 onclick="setNewPrimary(${idx})">
+                <img src="${item.dataUrl}" style="width:100%;height:100%;object-fit:cover;">
+                ${isPrimary ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(13,110,253,.85);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px;">
+                    <i class="fas fa-star"></i> Thumbnail</div>` : ''}
+            </div>
+            <button type="button" onclick="removeNewFile(${idx})"
+                style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#dc3545;border:none;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;">
+                <i class="fas fa-times"></i>
+            </button>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:110px;">
+                ${item.file.name}
+            </div>`;
+        newGrid.appendChild(card);
     });
 }
+
+// ── On form submit: inject base64 hidden inputs ──────────────────────
+// This replaces the unreliable DataTransfer / input.files approach.
+// We send images as hidden fields: new_image_b64[], new_image_mime[]
+theForm.addEventListener('submit', function(e) {
+    if (newFiles.length === 0) return; // nothing to inject
+
+    // Remove any previously injected hidden inputs (if user submitted twice)
+    theForm.querySelectorAll('.js-b64-img').forEach(el => el.remove());
+
+    newFiles.forEach((item, idx) => {
+        const b64Input = document.createElement('input');
+        b64Input.type  = 'hidden';
+        b64Input.name  = 'new_image_b64[]';
+        b64Input.value = item.base64;
+        b64Input.className = 'js-b64-img';
+
+        const mimeInput = document.createElement('input');
+        mimeInput.type  = 'hidden';
+        mimeInput.name  = 'new_image_mime[]';
+        mimeInput.value = item.mimeType;
+        mimeInput.className = 'js-b64-img';
+
+        theForm.appendChild(b64Input);
+        theForm.appendChild(mimeInput);
+    });
+});
 
 // ── Size Tag Input ──────────────────────────────────────────
 (function(){
